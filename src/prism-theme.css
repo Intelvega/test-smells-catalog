@@ -1,0 +1,69 @@
+/* Tema Prism customizado, alinhado à paleta slate/zinc do catálogo. */
+code[class*='language-'],
+pre[class*='language-'] {
+  color: #e7e7ea;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  text-shadow: none;
+  background: none;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #62646b;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #9a9ca3;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #e8697a;
+}
+
+.token.boolean,
+.token.number {
+  color: #e8a33d;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #4fd1b8;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #9a9ca3;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #8b8ff0;
+}
+
+.token.function,
+.token.class-name {
+  color: #7bb8f0;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #e8a33d;
+}

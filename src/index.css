@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+
+  --color-canvas: #0b0c0e;
+  --color-surface: #131417;
+  --color-surface-2: #1a1c20;
+  --color-border: #26282e;
+  --color-border-soft: #1e2025;
+  --color-ink: #e7e7ea;
+  --color-ink-muted: #9a9ca3;
+  --color-ink-faint: #62646b;
+
+  --color-amber: #e8a33d;
+  --color-amber-soft: #3a2e18;
+  --color-teal: #4fd1b8;
+  --color-teal-soft: #123330;
+  --color-rose: #e8697a;
+  --color-rose-soft: #341b21;
+  --color-violet: #8b8ff0;
+}
+
+html {
+  background-color: var(--color-canvas);
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--color-violet);
+  color: #0b0c0e;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background-color: var(--color-border); border-radius: 999px; }
+::-webkit-scrollbar-track { background-color: transparent; }
+
+code, pre { font-family: var(--font-mono); }
