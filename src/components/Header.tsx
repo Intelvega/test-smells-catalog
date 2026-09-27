@@ -1,11 +1,12 @@
 import { Search, Bug } from 'lucide-react';
 
 interface HeaderProps {
+  total: number;
   query: string;
   onQueryChange: (value: string) => void;
 }
 
-export function Header({ query, onQueryChange }: HeaderProps) {
+export function Header({ total, query, onQueryChange }: HeaderProps) {
   return (
     <header className="border-b border-border-soft bg-canvas/95 backdrop-blur sticky top-0 z-30">
       <div className="mx-auto max-w-6xl px-5 py-4 sm:py-5">
@@ -19,7 +20,7 @@ export function Header({ query, onQueryChange }: HeaderProps) {
                 test-smells<span className="text-ink-faint">.catalog</span>
               </h1>
               <p className="text-xs text-ink-muted">
-                50 anti-padrões de teste em JavaScript &amp; TypeScript
+                {total} anti-padrões de teste em JavaScript &amp; TypeScript
               </p>
             </div>
           </div>

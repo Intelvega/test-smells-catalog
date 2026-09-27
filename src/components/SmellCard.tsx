@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ChevronDown, ScanSearch } from 'lucide-react';
 import type { CategoryMeta, TestSmell } from '../types/testSmell';
-import { ACCENT_CLASSES, SEVERITY_CLASSES } from '../data/accentStyles';
+import { ACCENT_CLASSES } from '../data/accentStyles';
 import { CodeComparisonView } from './CodeComparisonView';
 import { DetectionRuleModal } from './DetectionRuleModal';
 
@@ -15,6 +15,7 @@ interface SmellCardProps {
 export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps) {
   const [showRule, setShowRule] = useState(false);
   const accent = ACCENT_CLASSES[category.accent];
+  const relation = smell.flakiness ?? (smell.slug === 'flaky-test-intermittent-failures' ? 'direct' : smell.impact.includes('Flakiness') ? 'possible' : 'none');
 
   return (
     <div
@@ -34,9 +35,6 @@ export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps)
             </span>
             <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${accent.border} ${accent.bg} ${accent.text}`}>
               {category.shortLabel}
-            </span>
-            <span className={`rounded border px-1.5 py-0.5 text-[10px] capitalize ${SEVERITY_CLASSES[smell.severity]}`}>
-              {smell.severity}
             </span>
           </div>
           <h3 className="truncate text-sm font-medium text-ink sm:text-[15px]">{smell.name}</h3>
@@ -63,6 +61,12 @@ export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps)
             ))}
           </div>
 
+          {relation !== 'none' && (
+            <span className={`inline-flex rounded border px-2 py-1 text-[11px] font-medium ${relation === 'direct' ? 'border-rose-500/50 bg-rose-500/10 text-rose-200' : 'border-amber-500/50 bg-amber-500/10 text-amber-200'}`}>
+              {relation === 'direct' ? 'Flakiness direta' : 'Possível flakiness'}
+            </span>
+          )}
+
           <Section title="Definição teórica">
             <p className="text-sm leading-relaxed text-ink-muted">{smell.definition}</p>
           </Section>
@@ -74,6 +78,14 @@ export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps)
           <Section title="Comparador de código">
             <CodeComparisonView badExample={smell.badExample} goodExample={smell.goodExample} />
           </Section>
+
+          {smell.sources && smell.sources.length > 0 && (
+            <Section title="Referências">
+              <ul className="space-y-1 text-xs leading-relaxed text-ink-muted">
+                {smell.sources.map((source) => <li key={`${source.authors}-${source.year}`}>{source.authors} ({source.year}). <em>{source.title}</em>.</li>)}
+              </ul>
+            </Section>
+          )}
 
           <button
             onClick={() => setShowRule(true)}

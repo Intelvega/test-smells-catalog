@@ -1,7 +1,26 @@
 import type { TestSmell } from '../types/testSmell';
 
+const DISSERTATION = { authors: 'Meneses', year: 2025, title: 'Master’s Dissertation: Test Smells in JavaScript' } as const;
+const SNUTS = { authors: 'Oliveira, Mateus, Virgínio e Rocha', year: 2024, title: 'SNUTS.js: Sniffing Nasty Unit Test Smells in Javascript' } as const;
+const STEEL = { authors: 'Jorge, Machado e Andrade', year: 2021, title: 'Steel: Test Smell Detection for JavaScript' } as const;
+const SILVA = { authors: 'Silva', year: 2022, title: 'JavaScript Test Smell Detection Tool' } as const;
+
+function literatureSmell(input: Omit<TestSmell, 'badExample' | 'goodExample' | 'detectionRule'> & { bad: string; good: string; rule: string }): TestSmell {
+  return {
+    ...input,
+    badExample: { language: 'javascript', framework: 'Jest', code: input.bad },
+    goodExample: { language: 'javascript', framework: 'Jest', code: input.good },
+    detectionRule: {
+      name: input.rule,
+      description: 'Heurística estática proposta para identificar este padrão em callbacks de it/test e hooks Jest/Vitest.',
+      pseudocode: 'ON test callback: localizar o padrão sintático associado e reportar a ocorrência com o contexto do teste.',
+      tool: 'ESLint Rule (Babel AST)',
+    },
+  };
+}
+
 /**
- * Base de dados com os 50 test smells de JavaScript/TypeScript.
+ * Base de dados com os 66 test smells de JavaScript/TypeScript.
  * Organizada em 6 categorias, na ordem do catálogo acadêmico de referência.
  */
 export const TEST_SMELLS: TestSmell[] = [
@@ -15,7 +34,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Multiple Assertions Without Message'],
     category: 'assertions',
     impact: ['Manutenibilidade', 'Legibilidade'],
-    severity: 'médio',
     definition:
       'Um teste contém múltiplas asserções, sem mensagens que identifiquem qual delas falhou, forçando o leitor a "adivinhar" qual expectativa quebrou ao interpretar o relatório da CI.',
     manifestation:
@@ -72,7 +90,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Assertionless Test', 'Free Ride Assertion'],
     category: 'assertions',
     impact: ['Confiabilidade'],
-    severity: 'crítico',
     definition:
       'Um teste executa código de produção mas não contém nenhuma asserção explícita, então ele sempre "passa" independentemente do comportamento real do sistema.',
     manifestation:
@@ -115,7 +132,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Fragile Equality Check'],
     category: 'assertions',
     impact: ['Flakiness', 'Manutenibilidade'],
-    severity: 'alto',
     definition:
       'Uso de comparação estrita/ingênua (toBe, toString, ==) para valores compostos como objetos, arrays, datas ou moedas, cuja representação varia por referência, locale ou fuso horário.',
     manifestation:
@@ -159,7 +175,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Line Hitter', 'Coverage Padding'],
     category: 'assertions',
     impact: ['Confiabilidade'],
-    severity: 'alto',
     definition:
       'O teste apenas invoca o código de produção para "acender" linhas na métrica de cobertura, sem verificar se o estado ou resultado produzido está correto.',
     manifestation:
@@ -201,7 +216,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Nitpicker Assertion', 'Exhaustive Assertion'],
     category: 'assertions',
     impact: ['Manutenibilidade'],
-    severity: 'médio',
     definition:
       'O teste assere exaustivamente todos os campos de uma estrutura, incluindo detalhes irrelevantes à regra de negócio verificada, tornando-o frágil a qualquer mudança incidental no formato dos dados.',
     manifestation:
@@ -252,7 +266,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Duplicated Production Logic'],
     category: 'assertions',
     impact: ['Manutenibilidade', 'Confiabilidade'],
-    severity: 'alto',
     definition:
       'O teste recria, com laços ou funções auxiliares, a mesma lógica de produção para calcular o valor esperado, em vez de usar um valor fixo e independente — se a lógica de produção tiver um bug, o teste "concorda" com ele.',
     manifestation:
@@ -299,7 +312,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Conditional Assertion', 'Swallowed Assertion'],
     category: 'assertions',
     impact: ['Confiabilidade'],
-    severity: 'crítico',
     definition:
       'A asserção está escondida dentro de um bloco condicional (if/switch) que pode nunca ser executado, fazendo o teste passar silenciosamente sem checar nada quando a condição é falsa.',
     manifestation:
@@ -344,7 +356,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Missing Await Assertion'],
     category: 'assertions',
     impact: ['Flakiness', 'Confiabilidade'],
-    severity: 'alto',
     definition:
       'A asserção é executada antes da Promise sob teste ser resolvida ou rejeitada, geralmente por falta de await, fazendo o teste validar um estado incompleto ou não reportar erros de asserção assíncronos.',
     manifestation:
@@ -386,7 +397,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Duplicate Expect'],
     category: 'assertions',
     impact: ['Legibilidade'],
-    severity: 'baixo',
     definition:
       'A mesma asserção, sobre o mesmo estado, é repetida mais de uma vez no teste sem que nenhuma ação tenha alterado esse estado entre as chamadas.',
     manifestation:
@@ -429,7 +439,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['JSON.stringify Comparison'],
     category: 'assertions',
     impact: ['Manutenibilidade', 'Legibilidade'],
-    severity: 'médio',
     definition:
       'Uso de JSON.stringify() para comparar dois objetos em vez de um matcher de igualdade profunda nativo, o que quebra por diferenças triviais de ordem de chaves e gera mensagens de erro ilegíveis.',
     manifestation:
@@ -476,7 +485,6 @@ export const TEST_SMELLS: TestSmell[] = [
     aka: ['Fat Fixture', 'Overloaded Setup'],
     category: 'fixtures',
     impact: ['Manutenibilidade', 'Performance'],
-    severity: 'alto',
     definition:
       'Um beforeEach único monta um cenário enorme — múltiplos mocks, providers e dados — do qual a maioria dos testes da suíte só precisa de uma fração pequena, tornando o setup caro e difícil de entender.',
     manifestation:
@@ -536,7 +544,6 @@ describe('OrderService.checkout', () => {
     aka: ['Mystery Variables'],
     category: 'fixtures',
     impact: ['Legibilidade'],
-    severity: 'baixo',
     definition:
       'Variáveis globais mutáveis declaradas no topo da suíte com nomes e valores genéricos (foo, data1, x), obrigando o leitor a rolar o arquivo para entender o que representam em cada teste.',
     manifestation:
@@ -589,7 +596,6 @@ describe('OrderService.checkout', () => {
     aka: ['Patchwork Fixture'],
     category: 'fixtures',
     impact: ['Manutenibilidade', 'Flakiness'],
-    severity: 'alto',
     definition:
       'Uma fixture compartilhada foi "remendada" repetidamente ao longo do tempo — com overrides, spreads e exceções acumuladas — até se tornar quebradiça e difícil de prever seu estado final.',
     manifestation:
@@ -633,7 +639,6 @@ const adminUser = makeUser({ role: 'admin' });`,
     aka: ['Setup Bloat'],
     category: 'fixtures',
     impact: ['Legibilidade', 'Manutenibilidade'],
-    severity: 'médio',
     definition:
       'O corpo do teste contém dezenas de linhas de preparação de dados/mocks para, no final, executar apenas uma linha de ação e uma de asserção — a intenção do teste fica soterrada em ruído.',
     manifestation:
@@ -679,7 +684,6 @@ const adminUser = makeUser({ role: 'admin' });`,
     aka: ['Empty Setup Hook'],
     category: 'fixtures',
     impact: ['Legibilidade'],
-    severity: 'baixo',
     definition:
       'Hooks de ciclo de vida (beforeEach, afterAll etc.) declarados vazios ou apenas com comentários, esquecidos após uma refatoração, gerando ruído e confusão sobre a real necessidade do hook.',
     manifestation:
@@ -724,7 +728,6 @@ const adminUser = makeUser({ role: 'admin' });`,
     aka: ['Bury The Lede', 'Opaque Fixture File'],
     category: 'fixtures',
     impact: ['Legibilidade', 'Manutenibilidade'],
-    severity: 'médio',
     definition:
       'Dados essenciais para entender por que o teste passa ou falha estão encapsulados em arquivos externos (fixtures.json, mocks.ts) sem indicação clara no teste do que eles contêm ou por que aquele valor importa.',
     manifestation:
@@ -767,7 +770,6 @@ test('calcula elegibilidade de crédito', () => {
     aka: ['Setup Test', 'Guinea Pig Test'],
     category: 'fixtures',
     impact: ['Manutenibilidade', 'Confiabilidade'],
-    severity: 'alto',
     definition:
       'Um teste "mãe", geralmente o primeiro do arquivo, é responsável por montar o cenário de dados que os testes seguintes assumem já existir — criando dependência implícita de ordem de execução.',
     manifestation:
@@ -817,7 +819,6 @@ it('atualiza o usuário criado acima', async () => {
     aka: ['Dead Fixture Variable'],
     category: 'fixtures',
     impact: ['Legibilidade'],
-    severity: 'baixo',
     definition:
       'Variáveis, mocks ou spies são criados no corpo do teste ou nos hooks de setup, mas nunca são referenciados em nenhuma ação ou asserção — código morto que confunde o leitor.',
     manifestation:
@@ -862,7 +863,6 @@ it('atualiza o usuário criado acima', async () => {
     aka: ['Missing Cleanup'],
     category: 'fixtures',
     impact: ['Flakiness', 'Performance'],
-    severity: 'alto',
     definition:
       'Recursos abertos durante o teste — timers, mocks globais, conexões, elementos DOM, listeners — não são liberados ao final, vazando estado para os testes seguintes e causando falhas intermitentes.',
     manifestation:
@@ -927,7 +927,6 @@ it('atualiza o usuário criado acima', async () => {
     aka: ['Hidden Dependency'],
     category: 'dependencies',
     impact: ['Legibilidade', 'Manutenibilidade'],
-    severity: 'médio',
     definition:
       'O teste depende do conteúdo de um recurso externo (arquivo .json, .env, banco seedado) sem que o leitor consiga saber o que está sendo testado apenas lendo o corpo do teste.',
     manifestation:
@@ -972,7 +971,6 @@ it('atualiza o usuário criado acima', async () => {
     aka: ['Test Order Dependency'],
     category: 'dependencies',
     impact: ['Flakiness', 'Confiabilidade'],
-    severity: 'crítico',
     definition:
       'A passagem de um teste depende do sucesso ou da ordem de execução de um teste anterior, quebrando quando os testes são reordenados, filtrados ou paralelizados.',
     manifestation:
@@ -1024,7 +1022,6 @@ it('remove item do carrinho', () => {
     aka: ['Environmental Vandalism'],
     category: 'dependencies',
     impact: ['Flakiness', 'Confiabilidade'],
-    severity: 'crítico',
     definition:
       'O teste modifica objetos globais compartilhados (process.env, window, Date, Math.random) sem restaurar o valor original, "poluindo" o ambiente para os testes executados depois.',
     manifestation:
@@ -1076,7 +1073,6 @@ it('remove item do carrinho', () => {
     aka: ['Environment-Dependent Test'],
     category: 'dependencies',
     impact: ['Flakiness'],
-    severity: 'alto',
     definition:
       'O teste passa ou falha dependendo de características do ambiente de execução — timezone do SO, locale, terminador de linha (CRLF vs LF) — em vez de depender apenas da lógica sob teste.',
     manifestation:
@@ -1117,7 +1113,6 @@ it('remove item do carrinho', () => {
     aka: ['The Local Hero'],
     category: 'dependencies',
     impact: ['Confiabilidade'],
-    severity: 'alto',
     definition:
       'O teste embute caminhos absolutos do sistema de arquivos da máquina do autor, funcionando apenas localmente e quebrando em qualquer outra máquina ou no ambiente de CI.',
     manifestation:
@@ -1159,7 +1154,6 @@ it('remove item do carrinho', () => {
     aka: ['Hidden Integration Test', 'Real Network Call'],
     category: 'dependencies',
     impact: ['Flakiness', 'Performance'],
-    severity: 'crítico',
     definition:
       'Um teste nomeado/organizado como unitário dispara requisições HTTP reais pela rede por falta de mock, tornando-o lento, dependente de conectividade e de serviços de terceiros.',
     manifestation:
@@ -1208,7 +1202,6 @@ test('busca cotação do dólar', async () => {
     aka: ['Overspecified Interaction Test'],
     category: 'dependencies',
     impact: ['Manutenibilidade'],
-    severity: 'médio',
     definition:
       'O teste verifica exaustivamente como um método interno foi chamado (quantas vezes, com quais argumentos exatos, em qual ordem) em vez de verificar o comportamento observável, acoplando o teste a detalhes de implementação.',
     manifestation:
@@ -1255,7 +1248,6 @@ test('busca cotação do dólar', async () => {
     aka: ['Mock Chain Delegation'],
     category: 'dependencies',
     impact: ['Manutenibilidade'],
-    severity: 'baixo',
     definition:
       'Uma cadeia de mocks apenas delega chamadas para outros mocks sem que o teste valide nenhuma lógica real, tornando-o um "teste do próprio mock" em vez do código de produção.',
     manifestation:
@@ -1305,7 +1297,6 @@ test('busca usuário pelo id', async () => {
     aka: ['Mixed Async Style'],
     category: 'dependencies',
     impact: ['Legibilidade', 'Manutenibilidade'],
-    severity: 'médio',
     definition:
       'O mesmo arquivo (ou até o mesmo teste) mistura estilos assíncronos incompatíveis — callback done(), Promises encadeadas com .then() e async/await — dificultando o rastreio do fluxo de execução.',
     manifestation:
@@ -1361,7 +1352,6 @@ it('lê registro', async () => {
     aka: ['Copy-Paste Test'],
     category: 'duplication',
     impact: ['Manutenibilidade'],
-    severity: 'médio',
     definition:
       'Vários testes praticamente idênticos, variando apenas um ou dois valores de entrada, foram criados por copiar e colar em vez de parametrização — qualquer mudança na lógica exige editar todos eles.',
     manifestation:
@@ -1409,7 +1399,6 @@ test('valida CPF vazio', () => {
     aka: ['Giant Test', 'God Test'],
     category: 'duplication',
     impact: ['Legibilidade', 'Manutenibilidade'],
-    severity: 'alto',
     definition:
       'Um único teste acumula múltiplos cenários e fluxos de ação/verificação, tornando difícil identificar qual parte falhou e o que exatamente está sendo validado.',
     manifestation:
@@ -1471,7 +1460,6 @@ test('remove uma tarefa da listagem', async () => {
     aka: ['Magic Values'],
     category: 'duplication',
     impact: ['Legibilidade'],
-    severity: 'baixo',
     definition:
       'Números e literais arbitrários aparecem no teste sem nenhuma constante nomeada ou comentário que explique seu significado ou por que aquele valor específico foi escolhido.',
     manifestation:
@@ -1513,7 +1501,6 @@ test('aplica alíquota de 15% para renda na segunda faixa', () => {
     aka: ['Conditional Logic In Test'],
     category: 'duplication',
     impact: ['Manutenibilidade', 'Confiabilidade'],
-    severity: 'alto',
     definition:
       'O teste contém estruturas de controle complexas — laços, condicionais, tratamento de exceção não trivial — que introduzem sua própria lógica passível de bugs, minando a confiança de que o teste está correto.',
     manifestation:
@@ -1561,7 +1548,6 @@ test('aplica alíquota de 15% para renda na segunda faixa', () => {
     aka: ['Copy-Pasted Assertion Block'],
     category: 'duplication',
     impact: ['Legibilidade'],
-    severity: 'baixo',
     definition:
       'O mesmo conjunto de asserções (não apenas uma linha) é repetido em múltiplos testes sem variação, geralmente por ter sido copiado e colado ao criar novos casos de teste.',
     manifestation:
@@ -1619,7 +1605,6 @@ test('cria usuário comum', () => {
     aka: ['Hardcoded Secrets/URLs'],
     category: 'duplication',
     impact: ['Manutenibilidade', 'Confiabilidade'],
-    severity: 'crítico',
     definition:
       'URLs de serviços, tokens de autenticação ou outras configurações de ambiente são escritos diretamente no código do teste, em vez de vir de variáveis de ambiente ou de configuração injetável.',
     manifestation:
@@ -1664,7 +1649,6 @@ test('cria usuário comum', () => {
     aka: ['Overly Abstracted Test'],
     category: 'duplication',
     impact: ['Legibilidade'],
-    severity: 'médio',
     definition:
       'Na tentativa de eliminar duplicação, o teste é abstraído em tantas funções utilitárias e camadas indiretas que o leitor perde o fluxo do cenário — o "DRY" prejudica o "Descriptive And Meaningful Phrases".',
     manifestation:
@@ -1715,7 +1699,6 @@ test('cenário 1', () => {
     aka: ['Zombie Test'],
     category: 'duplication',
     impact: ['Manutenibilidade'],
-    severity: 'baixo',
     definition:
       'Um teste inteiro é desativado comentando seu código com // ou /* */, em vez de usar os mecanismos semânticos do framework (test.skip, test.todo), perdendo rastreabilidade sobre por que foi desativado.',
     manifestation:
@@ -1765,7 +1748,6 @@ test('valida limite de crédito negativo', () => {
     aka: ['Stinky Synchronization', 'Arbitrary Delay'],
     category: 'execution',
     impact: ['Flakiness', 'Performance'],
-    severity: 'alto',
     definition:
       'O teste usa um delay arbitrário e fixo (setTimeout, sleep) para "esperar" uma operação assíncrona terminar, em vez de aguardar uma condição real — é lento quando desnecessário e ainda pode falhar quando insuficiente.',
     manifestation:
@@ -1810,7 +1792,6 @@ test('valida limite de crédito negativo', () => {
     aka: ['Non-Deterministic Test'],
     category: 'execution',
     impact: ['Flakiness', 'Confiabilidade'],
-    severity: 'crítico',
     definition:
       'O teste falha de forma não-determinística — às vezes passa, às vezes falha, sem mudança no código — geralmente por condição de corrida entre Promises concorrentes ou dependência de timing.',
     manifestation:
@@ -1861,7 +1842,6 @@ test('valida limite de crédito negativo', () => {
     aka: ['Print Statement Smell'],
     category: 'execution',
     impact: ['Legibilidade', 'Performance'],
-    severity: 'baixo',
     definition:
       'Chamadas de depuração como console.log foram deixadas no teste após o desenvolvimento, poluindo a saída da suíte e do relatório de CI sem valor informativo permanente.',
     manifestation:
@@ -1903,7 +1883,7 @@ test('valida limite de crédito negativo', () => {
     aka: ['Skipped Test Debt'],
     category: 'execution',
     impact: ['Confiabilidade'],
-    severity: 'alto',
+    sources: [STEEL],
     definition:
       'Testes marcados permanentemente com skip/xit/xdescribe acumulam débito técnico invisível: continuam existindo no código, mas nunca são executados, dando falsa sensação de cobertura.',
     manifestation:
@@ -1942,7 +1922,6 @@ test.skip('valida integração com gateway de pagamento', () => {
     aka: ['Heavy Unit Test'],
     category: 'execution',
     impact: ['Performance'],
-    severity: 'médio',
     definition:
       'Um teste classificado como unitário leva um tempo excessivo para rodar, geralmente por falta de isolamento (I/O real) ou por computação pesada síncrona, degradando o feedback rápido da suíte.',
     manifestation:
@@ -1985,7 +1964,6 @@ test.skip('valida integração com gateway de pagamento', () => {
     aka: ['Manual-Step Test'],
     category: 'execution',
     impact: ['Confiabilidade', 'Performance'],
-    severity: 'alto',
     definition:
       'O teste requer intervenção manual do desenvolvedor (observar uma janela, clicar fisicamente, inspecionar visualmente um resultado) ou abre um navegador real fora do modo headless, impedindo execução automatizada e paralela.',
     manifestation:
@@ -2033,7 +2011,6 @@ ON DebuggerStatement in TestFile:
     aka: ['Early Cleanup'],
     category: 'execution',
     impact: ['Flakiness'],
-    severity: 'alto',
     definition:
       'A limpeza de recursos (fechar conexão, desmontar componente, cancelar timers) é executada antes que Promises pendentes relacionadas ao teste terminem de rodar, causando erros de "objeto já destruído" intermitentes.',
     manifestation:
@@ -2085,7 +2062,6 @@ test('consulta usuário', async () => {
     aka: ['Vacuous Test', 'Tautological Test'],
     category: 'execution',
     impact: ['Confiabilidade'],
-    severity: 'crítico',
     definition:
       'O teste continua passando mesmo depois de uma falha real ser introduzida no código de produção (falso negativo de detecção), geralmente por comparar um valor consigo mesmo ou por um matcher sempre verdadeiro.',
     manifestation:
@@ -2121,7 +2097,7 @@ test('consulta usuário', async () => {
   },
 
   // ─────────────────────────────────────────────────────────
-  // Categoria 6 — Test Semantic & Design (45–50)
+  // Categoria 6 — Test Semantic & Design (45–50); extensões da literatura (51–66)
   // ─────────────────────────────────────────────────────────
   {
     id: 45,
@@ -2130,7 +2106,6 @@ test('consulta usuário', async () => {
     aka: ['Empty Catch Block'],
     category: 'semantics',
     impact: ['Confiabilidade'],
-    severity: 'crítico',
     definition:
       'Um bloco try/catch vazio no teste silencia qualquer exceção inesperada, fazendo o teste passar mesmo quando o código sob teste lançou um erro que deveria ter sido investigado.',
     manifestation:
@@ -2178,7 +2153,6 @@ test('rejeita upload de arquivo corrompido', async () => {
     aka: ['Multi-Method Test'],
     category: 'semantics',
     impact: ['Legibilidade', 'Manutenibilidade'],
-    severity: 'médio',
     definition:
       'Um único teste tenta exercitar múltiplos métodos ou casos de uso distintos da unidade sob teste, misturando responsabilidades e dificultando saber qual comportamento quebrou quando ele falha.',
     manifestation:
@@ -2234,7 +2208,6 @@ test('aplica cupom sobre o total', () => {
     aka: ['Redundant Coverage Test'],
     category: 'semantics',
     impact: ['Manutenibilidade'],
-    severity: 'baixo',
     definition:
       'Múltiplos testes exercitam exatamente o mesmo caminho de código com os mesmos tipos de entrada, sem variar parâmetros ou cenários — o oposto do Eager Test: testes de menos, cobrindo o mesmo caso repetidamente.',
     manifestation:
@@ -2283,7 +2256,6 @@ test('soma dois números - caso 3', () => {
     aka: ['Poor Test Naming', 'Uninformative Test Name'],
     category: 'semantics',
     impact: ['Legibilidade'],
-    severity: 'médio',
     definition:
       'O nome do teste não descreve o comportamento esperado nem o cenário testado, obrigando o leitor a abrir o corpo do teste (ou o relatório de falha) para entender o que estava sendo verificado.',
     manifestation:
@@ -2329,7 +2301,6 @@ it('não aplica desconto para clientes regulares', () => {
     aka: ['White-Box Overreach'],
     category: 'semantics',
     impact: ['Manutenibilidade'],
-    severity: 'alto',
     definition:
       'O teste acessa propriedades ou funções privadas/não exportadas de um módulo, forçando gambiarras como espelhamento (mirroring) do módulo ou uso de APIs internas do TypeScript, e quebrando a cada refatoração interna mesmo sem mudança de comportamento público.',
     manifestation:
@@ -2377,7 +2348,6 @@ test('calcula desconto interno', () => {
     aka: ['Untyped/Unlinted Test Code'],
     category: 'semantics',
     impact: ['Manutenibilidade', 'Confiabilidade'],
-    severity: 'médio',
     definition:
       'O código de teste é tratado com menos rigor que o código de produção: abuso do tipo any, regras de lint desabilitadas, e negligência técnica geral — como se testes não merecessem a mesma qualidade de engenharia.',
     manifestation:
@@ -2423,4 +2393,133 @@ test('atualiza nome do usuário', () => {
     },
     tags: ['any', 'eslint-disable', 'qualidade de código', 'TypeScript'],
   },
+
+  literatureSmell({
+    id: 51, slug: 'anonymous-test', name: 'Anonymous Test', aka: ['Poorly Named Test'], category: 'semantics', impact: ['Legibilidade', 'Manutenibilidade'], flakiness: 'none',
+    definition: 'Teste cujo nome é vago ou não comunica o comportamento verificado.',
+    manifestation: 'Descrições como “teste 1” ou “funciona” não explicam cenário nem resultado esperado.',
+    bad: "test('teste 1', () => { expect(total(1, 2)).toBe(3); });",
+    good: "test('soma dois valores positivos', () => { expect(total(1, 2)).toBe(3); });",
+    rule: 'anonymous-or-vague-test-name', tags: ['nome', 'semântica', 'clareza'], sources: [DISSERTATION]
+  }),
+  literatureSmell({
+    id: 52, slug: 'conditional-test-logic', name: 'Conditional Test Logic', aka: ['Conditional Test'], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Uso de condicionais ou laços para decidir a lógica de verificação dentro de um teste.',
+    manifestation: 'if/else, switch ou loop em it/test tornam os caminhos do teste difíceis de interpretar e podem ocultar resultados dependentes do estado.',
+    bad: "test('valida status', () => { if (user.admin) expect(role()).toBe('admin'); else expect(role()).toBe('user'); });",
+    good: "test.each([['admin', 'admin'], ['user', 'user']])('retorna %s', (role, expected) => { expect(roleFor(role)).toBe(expected); });",
+    rule: 'control-flow-inside-test', tags: ['if', 'loop', 'controle de fluxo'], sources: [DISSERTATION, STEEL]
+  }),
+  literatureSmell({
+    id: 53, slug: 'exception-handling', name: 'Exception Handling', aka: ['Expected Exception Test'], category: 'execution', impact: ['Confiabilidade', 'Manutenibilidade'], flakiness: 'possible',
+    definition: 'Verificação de exceção por try/catch ou throw manual em vez de matcher declarativo do framework.',
+    manifestation: 'Um catch pode engolir a falha ou deixar o teste passar quando a exceção esperada não acontece.',
+    bad: "test('rejeita e-mail inválido', async () => { try { await createUser('x'); } catch (error) { expect(error.message).toBe('invalid'); } });",
+    good: "test('rejeita e-mail inválido', async () => { await expect(createUser('x')).rejects.toThrow('invalid'); });",
+    rule: 'manual-exception-handling', tags: ['try-catch', 'rejects', 'exceção'], sources: [DISSERTATION, STEEL]
+  }),
+  literatureSmell({
+    id: 54, slug: 'overcommented-test', name: 'Overcommented Test', aka: ['Excessive Comments'], category: 'semantics', impact: ['Legibilidade', 'Manutenibilidade'], flakiness: 'none',
+    definition: 'Teste com comentários em excesso que repetem o que o código já expressa.',
+    manifestation: 'Comentários descrevem cada passo trivial de setup e asserção, encobrindo a intenção real do cenário.',
+    bad: `test('soma valores', () => { // cria a calculadora\n  const calc = new Calc(); // soma os números\n  const result = calc.sum(1, 2); // verifica o resultado\n  expect(result).toBe(3); });`,
+    good: "test('soma dois valores', () => { expect(new Calc().sum(1, 2)).toBe(3); });",
+    rule: 'comment-density-in-test', tags: ['comentários', 'legibilidade'], sources: [DISSERTATION, SNUTS]
+  }),
+  literatureSmell({
+    id: 55, slug: 'suboptimal-assertion', name: 'Suboptimal Assertion', aka: ['Suboptimal Assert'], category: 'assertions', impact: ['Confiabilidade', 'Legibilidade'], flakiness: 'none',
+    definition: 'Asserção genérica que não expressa precisamente o comportamento esperado apesar de haver um matcher mais adequado.',
+    manifestation: 'expect(resultado).toBeTruthy() esconde a propriedade relevante que deveria ser especificada.',
+    bad: "test('cria usuário', () => { const user = createUser(); expect(user).toBeTruthy(); });",
+    good: "test('cria usuário ativo', () => { const user = createUser(); expect(user.status).toBe('active'); });",
+    rule: 'generic-assertion-where-specific-is-available', tags: ['expect', 'asserção', 'precisão'], sources: [DISSERTATION, SILVA]
+  }),
+  literatureSmell({
+    id: 56, slug: 'unknown-test', name: 'Unknown Test', aka: ['No Assertion Test'], category: 'assertions', impact: ['Confiabilidade', 'Manutenibilidade'], flakiness: 'none',
+    definition: 'Teste sem asserções explícitas que não deixa claro qual comportamento está sendo validado.',
+    manifestation: 'A chamada é executada e o teste passa mesmo quando o resultado funcional está errado.',
+    bad: "test('atualiza perfil', async () => { await updateProfile({ name: 'Ana' }); });",
+    good: "test('atualiza o nome do perfil', async () => { const user = await updateProfile({ name: 'Ana' }); expect(user.name).toBe('Ana'); });",
+    rule: 'missing-explicit-assertion', tags: ['assertionless', 'expect', 'confiabilidade'], sources: [DISSERTATION, STEEL]
+  }),
+  literatureSmell({
+    id: 57, slug: 'verbose-test', name: 'Verbose Test', aka: ['Verbose Statement'], category: 'semantics', impact: ['Manutenibilidade', 'Legibilidade'], flakiness: 'none',
+    definition: 'Teste excessivamente longo que agrega vários objetivos e torna o diagnóstico difícil.',
+    manifestation: 'Setup, execução e várias verificações independentes ficam concentrados em um único callback.',
+    bad: "test('processa pedido', () => { const order = createOrder(); pay(order); ship(order); expect(order.status).toBe('shipped'); expect(order.total).toBe(10); expect(order.emailSent).toBe(true); });",
+    good: "test('envia pedido pago', () => { const order = paidOrder(); ship(order); expect(order.status).toBe('shipped'); });",
+    rule: 'oversized-test-callback', tags: ['linhas', 'responsabilidade única'], sources: [DISSERTATION, SILVA]
+  }),
+  literatureSmell({
+    id: 58, slug: 'comments-only-test', name: 'Comments Only Test', aka: ['Commented-Out Test'], category: 'execution', impact: ['Manutenibilidade'], flakiness: 'none',
+    definition: 'Teste ou bloco de teste inteiramente comentado, portanto ausente da execução.',
+    manifestation: 'Código de teste é desativado por comentários em vez de removido, corrigido ou marcado explicitamente.',
+    bad: `// test('remove usuário', () => {\n//   expect(removeUser(1)).toBe(true);\n// });`,
+    good: "test.skip('remove usuário: aguarda correção #123', () => { expect(removeUser(1)).toBe(true); });",
+    rule: 'commented-out-test-block', tags: ['comentado', 'execução'], sources: [SNUTS]
+  }),
+  literatureSmell({
+    id: 59, slug: 'complex-snapshot-test', name: 'Complex Snapshot Test', aka: ['Complex Snapshot'], category: 'assertions', impact: ['Manutenibilidade', 'Flakiness'], flakiness: 'possible',
+    definition: 'Snapshot excessivamente grande ou estruturalmente complexo, difícil de revisar e sujeito a mudanças incidentais.',
+    manifestation: 'toMatchSnapshot() registra uma árvore completa com valores voláteis em vez de validar uma saída estável e pequena.',
+    bad: "test('renderiza painel', () => { expect(render(<Dashboard user={user} />).container).toMatchSnapshot(); });",
+    good: "test('mostra o nome do usuário', () => { render(<Dashboard user={user} />); expect(screen.getByText(user.name)).toBeInTheDocument(); });",
+    rule: 'large-or-volatile-snapshot', tags: ['snapshot', 'ui', 'flakiness'], sources: [SILVA, SNUTS]
+  }),
+  literatureSmell({
+    id: 60, slug: 'identical-test-description', name: 'Identical Description Test', aka: ['Identical Test Description'], category: 'semantics', impact: ['Legibilidade', 'Manutenibilidade'], flakiness: 'none',
+    definition: 'Dois ou mais testes no mesmo escopo compartilham a mesma descrição.',
+    manifestation: 'Relatórios de CI não permitem distinguir facilmente qual cenário falhou.',
+    bad: `test('valida usuário', () => expect(valid('a@b.com')).toBe(true));\ntest('valida usuário', () => expect(valid('invalido')).toBe(false));`,
+    good: `test('aceita e-mail válido', () => expect(valid('a@b.com')).toBe(true));\ntest('rejeita e-mail inválido', () => expect(valid('invalido')).toBe(false));`,
+    rule: 'duplicate-test-description-in-scope', tags: ['descrição', 'nome', 'relatório'], sources: [SILVA, SNUTS]
+  }),
+  literatureSmell({
+    id: 61, slug: 'non-functional-statement', name: 'Non-Functional Statement', aka: ['Non Functional Statement'], category: 'semantics', impact: ['Manutenibilidade', 'Legibilidade'], flakiness: 'none',
+    definition: 'Instrução no teste que não contribui para setup, execução ou verificação do comportamento.',
+    manifestation: 'Expressões soltas, cálculos sem uso e declarações sem efeito adicionam ruído à especificação executável.',
+    bad: "test('calcula total', () => { const order = orderFactory(); order.id; expect(total(order)).toBe(10); });",
+    good: "test('calcula total', () => { const order = orderFactory(); expect(total(order)).toBe(10); });",
+    rule: 'statement-without-test-effect', tags: ['código morto', 'ruído'], sources: [SILVA, SNUTS]
+  }),
+  literatureSmell({
+    id: 62, slug: 'test-without-description', name: 'Test Without Description', aka: ['TWD'], category: 'semantics', impact: ['Legibilidade', 'Manutenibilidade'], flakiness: 'none',
+    definition: 'Caso de teste criado sem texto descritivo.',
+    manifestation: 'Jest/Vitest permite passar diretamente o callback; o relatório resultante perde o contexto do comportamento testado.',
+    bad: "test(() => { expect(sum(1, 2)).toBe(3); });",
+    good: "test('soma dois números', () => { expect(sum(1, 2)).toBe(3); });",
+    rule: 'test-call-without-description', tags: ['descrição', 'jest', 'vitest'], sources: [SNUTS]
+  }),
+  literatureSmell({
+    id: 63, slug: 'transcripting-test', name: 'Transcripting Test', aka: ['Print Statement in Test'], category: 'semantics', impact: ['Legibilidade', 'Performance'], flakiness: 'none',
+    definition: 'Uso de comandos de impressão no corpo do teste.',
+    manifestation: 'console.log, console.debug ou print permanecem como registro transitório e poluem a saída da suíte.',
+    bad: "test('calcula total', () => { const value = total(order); console.log(value); expect(value).toBe(10); });",
+    good: "test('calcula total', () => { expect(total(order)).toBe(10); });",
+    rule: 'console-output-in-test', tags: ['console', 'log', 'saída'], sources: [SNUTS]
+  }),
+  literatureSmell({
+    id: 64, slug: 'verify-in-setup', name: 'Verify in Setup', aka: ['Verifying in Setup Method'], category: 'fixtures', impact: ['Confiabilidade', 'Manutenibilidade'], flakiness: 'possible',
+    definition: 'Asserção executada em hook de setup compartilhado em vez do teste que define a expectativa.',
+    manifestation: 'Falhas em beforeEach são atribuídas a todos os casos dependentes e escondem a intenção de cada cenário.',
+    bad: `beforeEach(() => { user = createUser(); expect(user.id).toBeDefined(); });\ntest('envia mensagem', () => { expect(send(user)).toBe(true); });`,
+    good: `beforeEach(() => { user = createUser(); });\ntest('cria usuário com id', () => { expect(user.id).toBeDefined(); });`,
+    rule: 'assertion-inside-setup-hook', tags: ['beforeEach', 'setup', 'assertion'], sources: [SILVA, SNUTS]
+  }),
+  literatureSmell({
+    id: 65, slug: 'constructor-initialization', name: 'Constructor Initialization', aka: ['Initialization in Constructor'], category: 'fixtures', impact: ['Manutenibilidade', 'Legibilidade'], flakiness: 'none',
+    definition: 'Fixture de teste inicializada no construtor da classe de teste em vez de em hook apropriado.',
+    manifestation: 'A criação fica distante dos cenários e pode compartilhar estado de forma pouco explícita.',
+    bad: "class CartTest { constructor() { this.cart = new Cart(); } testTotal() { expect(this.cart.total()).toBe(0); } }",
+    good: "describe('Cart', () => { let cart; beforeEach(() => { cart = new Cart(); }); test('inicia vazinho', () => { expect(cart.total()).toBe(0); }); });",
+    rule: 'fixture-created-in-test-constructor', tags: ['constructor', 'fixture', 'setup'], sources: [STEEL]
+  }),
+  literatureSmell({
+    id: 66, slug: 'empty-test', name: 'Empty Test', aka: ['Empty Test Method'], category: 'execution', impact: ['Confiabilidade', 'Manutenibilidade'], flakiness: 'none',
+    definition: 'Caso de teste sem instruções executáveis.',
+    manifestation: 'Um it/test vazio aparece como aprovado e cria uma falsa impressão de cobertura.',
+    bad: "test('remove usuário', () => {});",
+    good: "test('remove usuário', () => { expect(removeUser(1)).toBe(true); });",
+    rule: 'empty-test-callback', tags: ['vazio', 'cobertura', 'execução'], sources: [STEEL]
+  }),
 ];
