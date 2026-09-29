@@ -48,6 +48,8 @@ export interface TestSmell {
   flakiness?: FlakinessRelation;
   definition: string;
   manifestation: string;
+  /** Efeito prático mais provável quando o smell permanece no teste. */
+  consequences?: string;
   badExample: CodeExample;
   goodExample: CodeExample;
   detectionRule: DetectionRule;

@@ -23,7 +23,77 @@ function literatureSmell(input: Omit<TestSmell, 'badExample' | 'goodExample' | '
  * Base de dados com os 66 test smells de JavaScript/TypeScript.
  * Organizada em 6 categorias, na ordem do catálogo acadêmico de referência.
  */
-export const TEST_SMELLS: TestSmell[] = [
+
+const CONSEQUENCES: Record<string, string> = {
+  'assertion-roulette': 'Dificulta localizar a expectativa que falhou e aumenta o tempo de diagnóstico na CI.',
+  'assertion-free-test': 'Permite que regressões passem despercebidas, pois o teste não verifica nenhum resultado observável.',
+  'sensitive-equality': 'Pode falhar por diferenças irrelevantes de representação, ordem ou precisão entre execuções.',
+  'missing-assertions-line-hitter': 'Cria uma falsa percepção de cobertura: linhas são executadas sem que o comportamento seja validado.',
+  'over-checking-nitpicker': 'Torna o teste frágil a detalhes irrelevantes da implementação e eleva o custo de manutenção.',
+  'calculating-expected-results-on-the-fly': 'Reproduz a lógica de produção no teste e pode mascarar o mesmo erro nos dois lados.',
+  'under-the-carpet-assertion': 'Oculta a verificação em fluxos auxiliares, dificultando entender o que o cenário realmente garante.',
+  'premature-assertions': 'Verifica o estado antes da conclusão da operação e pode gerar resultados intermitentes.',
+  'redundant-assertion': 'Adiciona ruído sem aumentar a detecção de falhas, tornando a intenção menos clara.',
+  'equality-sledgehammer-assertion': 'Compara mais dados do que o necessário e quebra quando detalhes não relevantes mudam.',
+  'general-fixture': 'Aumenta o acoplamento entre testes e torna o setup mais difícil de entender e alterar.',
+  'vague-header-setup': 'Esconde o propósito do estado inicial e obriga o leitor a percorrer o código para compreender o cenário.',
+  'curdled-test-fixtures': 'Mantém dados de fixture obsoletos, confundindo o cenário e aumentando a manutenção.',
+  'excessive-inline-setup': 'Mistura preparação e verificação, alongando o teste e dificultando a leitura do comportamento testado.',
+  'empty-shared-fixture': 'Indica uma abstração sem utilidade, acrescentando complexidade sem reduzir repetição.',
+  'hidden-test-data-bury-the-lede': 'Oculta entradas importantes longe da asserção, reduzindo a legibilidade do cenário.',
+  'the-mother-hen': 'Centraliza setup demais e cria dependências implícitas entre testes.',
+  'unused-definition': 'Deixa código morto no teste, aumentando ruído e a chance de manutenção equivocada.',
+  'resource-leakage-missing-teardown': 'Vaza recursos e estado entre testes, causando lentidão, interferência e flakiness.',
+  'mystery-guest': 'Introduz dependências externas pouco visíveis, reduzindo isolamento e reprodutibilidade.',
+  'chain-gang-dependent-test': 'Faz um teste depender do anterior, de modo que falhas se propagam e a ordem passa a importar.',
+  'test-pollution-environmental-vandal': 'Altera estado compartilhado sem restaurá-lo e pode afetar testes executados depois.',
+  'context-sensitivity': 'Faz o resultado depender de ambiente, horário ou configuração externa, favorecendo flakiness.',
+  'local-only-testing-the-local-hero': 'Pode passar somente na máquina do autor e falhar em CI ou em outros ambientes.',
+  'web-browsing-test-hidden-integration': 'Depende de rede e serviços externos, tornando a execução lenta e instável.',
+  'counting-on-spies': 'Acopla o teste à sequência interna de chamadas e dificulta refatorações seguras.',
+  'middle-man': 'Adiciona camadas sem comportamento relevante, deixando o teste mais indireto e difícil de manter.',
+  'programming-paradigms-blend': 'Mistura estilos de teste e confunde o fluxo de controle e as responsabilidades.',
+  'duplicate-test-code-copy-paste': 'Duplica correções e torna cenários semelhantes inconsistentes ao longo do tempo.',
+  'long-test': 'Agrupa muitos comportamentos, piorando leitura, diagnóstico e manutenção.',
+  'magic-number-magic-values': 'Oculta o significado dos valores de teste e dificulta a revisão do cenário.',
+  'complicated-logic-in-tests': 'Cria ramificações e cálculos difíceis de validar, podendo esconder defeitos no próprio teste.',
+  'duplicate-assert': 'Repete a mesma verificação sem ampliar a cobertura e gera ruído na especificação.',
+  'hardcoded-environment-configuration': 'Acopla o teste a máquinas e serviços específicos, reduzindo portabilidade e reprodutibilidade.',
+  'over-refactoring-overly-dry-tests': 'Abstrai demais os cenários e esconde detalhes relevantes para quem lê o teste.',
+  'commented-out-test': 'Remove cobertura sem transparência e acumula código obsoleto no repositório.',
+  'sleepy-test-stinky-synchronization': 'Depende de tempo arbitrário, ficando lento e sujeito a flakiness sob carga variável.',
+  'flaky-test-intermittent-failures': 'Alterna entre passar e falhar sem mudança de código, enfraquecendo a confiança na suíte.',
+  'chatty-logging-print-statement': 'Polui os logs da CI, dificulta encontrar falhas reais e pode reduzir o desempenho.',
+  'ignored-disabled-test': 'Reduz a cobertura efetiva e preserva falhas conhecidas sem acompanhamento claro.',
+  'slow-test': 'Aumenta o tempo de feedback e incentiva execuções parciais da suíte.',
+  'interactive-test': 'Exige intervenção humana e impede automação confiável na CI.',
+  'premature-teardown': 'Encerra recursos antes do término do cenário, causando falhas intermitentes.',
+  'unsound-test-false-positive-negative': 'Pode aprovar comportamento incorreto ou reprovar comportamento correto, comprometendo a confiança na suíte.',
+  'the-silent-catcher-empty-catch': 'Engole erros e permite que falhas de produção passem como sucesso do teste.',
+  'eager-test': 'Verifica muitos comportamentos em um caso, tornando a origem da falha ambígua.',
+  'lazy-test': 'Espalha um único comportamento por vários testes, aumentando duplicação e custo de manutenção.',
+  'what-are-we-testing-poor-naming': 'Não comunica a intenção do caso e torna resultados de CI difíceis de interpretar.',
+  'testing-private-implementation': 'Acopla o teste a detalhes internos e quebra durante refatorações sem mudança de comportamento.',
+  'second-class-citizens': 'Deixa o código de teste degradar, reduzindo sua capacidade de documentar e proteger o produto.',
+  'anonymous-test': 'Impede identificar rapidamente o comportamento coberto e torna falhas de CI pouco informativas.',
+  'conditional-test-logic': 'Multiplica caminhos no teste e pode ocultar resultados dependentes de estado ou ordem.',
+  'exception-handling': 'Pode engolir a exceção esperada ou deixar o teste passar sem que a falha seja verificada.',
+  'overcommented-test': 'Aumenta ruído visual e torna mais difícil localizar a lógica que realmente importa.',
+  'suboptimal-assertion': 'Produz falhas pouco diagnósticas e pode aceitar resultados que não expressam o comportamento esperado.',
+  'unknown-test': 'Não especifica o resultado esperado e pode passar mesmo diante de regressões funcionais.',
+  'verbose-test': 'Dilui a intenção em muitos passos, dificultando diagnosticar e modificar o cenário.',
+  'comments-only-test': 'Desativa cobertura de forma silenciosa e mantém código de teste obsoleto.',
+  'complex-snapshot-test': 'Gera revisões difíceis e pode falhar por mudanças incidentais na estrutura renderizada.',
+  'identical-test-description': 'Torna os relatórios ambíguos, dificultando identificar qual cenário falhou.',
+  'non-functional-statement': 'Acrescenta instruções sem efeito, distraindo da preparação, ação e verificação.',
+  'test-without-description': 'Remove o contexto do relatório de execução e dificulta entender o propósito do caso.',
+  'transcripting-test': 'Polui a saída da suíte e pode esconder informações relevantes nos logs de CI.',
+  'verify-in-setup': 'Atribui a falha a vários testes e esconde qual cenário define a expectativa.',
+  'constructor-initialization': 'Deixa o setup distante dos cenários e pode tornar o compartilhamento de estado pouco explícito.',
+  'empty-test': 'Cria falsa impressão de cobertura porque passa sem executar nenhuma verificação.',
+};
+
+const RAW_TEST_SMELLS: TestSmell[] = [
   // ─────────────────────────────────────────────────────────
   // Categoria 1 — Issues in Assertions (1–10)
   // ─────────────────────────────────────────────────────────
@@ -2523,3 +2593,8 @@ test('atualiza nome do usuário', () => {
     rule: 'empty-test-callback', tags: ['vazio', 'cobertura', 'execução'], sources: [STEEL]
   }),
 ];
+
+export const TEST_SMELLS: TestSmell[] = RAW_TEST_SMELLS.map((smell) => ({
+  ...smell,
+  consequences: CONSEQUENCES[smell.slug],
+}));

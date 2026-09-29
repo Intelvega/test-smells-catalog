@@ -71,6 +71,10 @@ export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps)
             <p className="text-sm leading-relaxed text-ink-muted">{smell.definition}</p>
           </Section>
 
+          <Section title="Consequências">
+            <p className="text-sm leading-relaxed text-ink-muted">{smell.consequences ?? 'Reduz a clareza, a confiabilidade ou a capacidade de manutenção da suíte de testes.'}</p>
+          </Section>
+
           <Section title="Manifestação no ecossistema JS/TS">
             <p className="text-sm leading-relaxed text-ink-muted">{smell.manifestation}</p>
           </Section>
