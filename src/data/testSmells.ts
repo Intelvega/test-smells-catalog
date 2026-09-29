@@ -1,4 +1,4 @@
-import type { FlakinessProfile, TestSmell } from '../types/testSmell';
+import type { FlakinessProfile, LiteratureSource, TestSmell } from '../types/testSmell';
 
 const DISSERTATION = { authors: 'Meneses', year: 2025, title: 'Master’s Dissertation: Test Smells in JavaScript' } as const;
 const SNUTS = { authors: 'Oliveira, Mateus, Virgínio e Rocha', year: 2024, title: 'SNUTS.js: Sniffing Nasty Unit Test Smells in Javascript' } as const;
@@ -3840,8 +3840,49 @@ test('atualiza nome do usuário', () => {
   })
 ];
 
+
+const ACADEMIC_SOURCES_BY_SMELL: Record<string, LiteratureSource[]> = {
+  // Catálogo Gabriel/Meneses
+  'anonymous-test': [DISSERTATION],
+  'conditional-test-logic': [DISSERTATION],
+  'duplicate-assert': [DISSERTATION],
+  'exception-handling': [DISSERTATION],
+  'magic-number-magic-values': [DISSERTATION],
+  'overcommented-test': [DISSERTATION],
+  'sleepy-test-stinky-synchronization': [DISSERTATION],
+  'suboptimal-assertion': [DISSERTATION],
+  'unknown-test': [DISSERTATION],
+  'verbose-test': [DISSERTATION],
+
+  // SNUTS.js
+  'comments-only-test': [SNUTS],
+  'complex-snapshot-test': [SNUTS],
+  'general-fixture': [SNUTS],
+  'identical-test-description': [SNUTS],
+  'non-functional-statement': [SNUTS],
+  'readthedocs-only-test': [SNUTS],
+  'sensitive-equality': [SNUTS],
+  'test-without-description': [SNUTS],
+  'transcripting-test': [SNUTS],
+  'verify-in-setup': [SNUTS],
+
+  // Steel
+  'assertion-roulette': [STEEL],
+  'constructor-initialization': [STEEL],
+  'empty-test': [STEEL],
+  'ignored-disabled-test': [STEEL],
+  'redundant-assertion': [STEEL],
+};
+
+function mergeSources(existing: LiteratureSource[] | undefined, additional: LiteratureSource[] | undefined) {
+  return [...(existing ?? []), ...(additional ?? [])].filter(
+    (source, index, sources) => sources.findIndex((candidate) => candidate.authors === source.authors && candidate.year === source.year && candidate.title === source.title) === index,
+  );
+}
+
 export const TEST_SMELLS: TestSmell[] = RAW_TEST_SMELLS.map((smell) => ({
   ...smell,
   consequences: smell.consequences ?? CONSEQUENCES[smell.slug],
   flakinessProfile: FLAKINESS_PROFILES[smell.slug],
+  sources: mergeSources(smell.sources, ACADEMIC_SOURCES_BY_SMELL[smell.slug]),
 }));
