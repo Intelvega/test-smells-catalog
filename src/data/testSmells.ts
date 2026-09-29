@@ -1,4 +1,4 @@
-import type { TestSmell } from '../types/testSmell';
+import type { FlakinessProfile, TestSmell } from '../types/testSmell';
 
 const DISSERTATION = { authors: 'Meneses', year: 2025, title: 'Master’s Dissertation: Test Smells in JavaScript' } as const;
 const SNUTS = { authors: 'Oliveira, Mateus, Virgínio e Rocha', year: 2024, title: 'SNUTS.js: Sniffing Nasty Unit Test Smells in Javascript' } as const;
@@ -91,6 +91,124 @@ const CONSEQUENCES: Record<string, string> = {
   'verify-in-setup': 'Atribui a falha a vários testes e esconde qual cenário define a expectativa.',
   'constructor-initialization': 'Deixa o setup distante dos cenários e pode tornar o compartilhamento de estado pouco explícito.',
   'empty-test': 'Cria falsa impressão de cobertura porque passa sem executar nenhuma verificação.',
+};
+
+
+const FLAKINESS_PROFILES: Record<string, FlakinessProfile> = {
+  "flaky-test-intermittent-failures": {
+    "factors": [],
+    "explanation": "Este smell descreve o sintoma: o teste alterna entre passar e falhar sem mudança no código. A causa pode ser tempo, ordem, estado compartilhado ou ambiente externo.",
+    "example": "test('consulta status', async () => {\n  const response = await fetch('/status');\n  expect(response.ok).toBe(true); // falha apenas em algumas execuções\n});"
+  },
+  "sensitive-equality": {
+    "factors": [
+      "ordem"
+    ],
+    "explanation": "Comparações estruturais frágeis podem depender da ordem de itens ou da representação de valores. A flakiness surge quando a ordem não é garantida.",
+    "example": "expect(await listUsers()).toEqual([ana, bia]);\n// a API pode devolver Bia antes de Ana"
+  },
+  "premature-assertions": {
+    "factors": [
+      "tempo"
+    ],
+    "explanation": "A expectativa é avaliada antes de uma operação assíncrona terminar. Em execuções lentas, o dado ainda não está disponível.",
+    "example": "loadProfile();\nexpect(screen.getByText('Ana')).toBeVisible();\n// faltou await screen.findByText('Ana')"
+  },
+  "curdled-test-fixtures": {
+    "factors": [
+      "estado compartilhado",
+      "ordem"
+    ],
+    "explanation": "Fixtures obsoletas ou inconsistentes podem deixar dados inválidos disponíveis para outros cenários, especialmente quando há reutilização de estado.",
+    "example": "beforeEach(() => { user = sharedUser; });\ntest('edita perfil', () => { user.role = 'admin'; });"
+  },
+  "resource-leakage-missing-teardown": {
+    "factors": [
+      "tempo",
+      "ordem",
+      "estado compartilhado"
+    ],
+    "explanation": "Timers, conexões e servidores deixados abertos sobrevivem ao teste atual e interferem nos seguintes.",
+    "example": "test('inicia polling', () => {\n  setInterval(refresh, 1000);\n  // nenhum clearInterval\n});"
+  },
+  "chain-gang-dependent-test": {
+    "factors": [
+      "ordem",
+      "estado compartilhado"
+    ],
+    "explanation": "Um teste usa o resultado ou o estado criado por outro. Mudar a ordem de execução torna a suíte instável.",
+    "example": "test('cria usuário', () => { created = createUser(); });\ntest('remove usuário', () => { expect(removeUser(created.id)).toBe(true); });"
+  },
+  "test-pollution-environmental-vandal": {
+    "factors": [
+      "ordem",
+      "estado compartilhado",
+      "ambiente externo"
+    ],
+    "explanation": "Alterações globais não restauradas contaminam testes posteriores e fazem o resultado depender da ordem da suíte.",
+    "example": "test('modo manutenção', () => {\n  process.env.MODE = 'maintenance';\n  // faltou restaurar process.env.MODE\n});"
+  },
+  "context-sensitivity": {
+    "factors": [
+      "tempo",
+      "ambiente externo"
+    ],
+    "explanation": "O comportamento depende do relógio, timezone, locale, sistema operacional ou configuração da máquina.",
+    "example": "expect(new Date().getHours()).toBe(9);\n// muda conforme horário e fuso da execução"
+  },
+  "web-browsing-test-hidden-integration": {
+    "factors": [
+      "tempo",
+      "ambiente externo"
+    ],
+    "explanation": "A disponibilidade e a latência de rede ou de serviços externos variam entre execuções.",
+    "example": "const response = await fetch('https://api.example.com/health');\nexpect(response.status).toBe(200);"
+  },
+  "sleepy-test-stinky-synchronization": {
+    "factors": [
+      "tempo"
+    ],
+    "explanation": "Uma espera fixa não garante que a operação acabou. Sob carga, o tempo escolhido pode não ser suficiente.",
+    "example": "await new Promise((resolve) => setTimeout(resolve, 500));\nexpect(job.status).toBe('done');"
+  },
+  "premature-teardown": {
+    "factors": [
+      "tempo",
+      "estado compartilhado"
+    ],
+    "explanation": "Um recurso comum é encerrado enquanto ainda existem operações pendentes que o utilizam.",
+    "example": "afterEach(() => server.close());\ntest('responde', async () => { request(server); /* sem await */ });"
+  },
+  "conditional-test-logic": {
+    "factors": [
+      "ordem",
+      "estado compartilhado"
+    ],
+    "explanation": "Quando a condição depende de estado prévio ou dados variáveis, caminhos diferentes podem ser executados em cada rodada.",
+    "example": "if (currentUser.isAdmin) {\n  expect(menu()).toContain('Config');\n}"
+  },
+  "exception-handling": {
+    "factors": [
+      "tempo"
+    ],
+    "explanation": "Em fluxos assíncronos, try/catch manual pode não aguardar a rejeição correta e mascarar uma falha.",
+    "example": "try {\n  saveAsync(); // faltou await\n} catch (error) {\n  expect(error).toBeDefined();\n}"
+  },
+  "complex-snapshot-test": {
+    "factors": [
+      "tempo",
+      "ambiente externo"
+    ],
+    "explanation": "Snapshots com datas, IDs, locale ou conteúdo recebido externamente variam sem mudança relevante de comportamento.",
+    "example": "expect(render(<Dashboard generatedAt={new Date()} />).container)\n  .toMatchSnapshot();"
+  },
+  "verify-in-setup": {
+    "factors": [
+      "estado compartilhado"
+    ],
+    "explanation": "Não causa flakiness isoladamente, mas uma falha instável no setup é atribuída a vários testes e fica mais difícil de diagnosticar.",
+    "example": "beforeEach(async () => {\n  user = await createRemoteUser();\n  expect(user.id).toBeDefined();\n});"
+  }
 };
 
 const RAW_TEST_SMELLS: TestSmell[] = [
@@ -2597,4 +2715,5 @@ test('atualiza nome do usuário', () => {
 export const TEST_SMELLS: TestSmell[] = RAW_TEST_SMELLS.map((smell) => ({
   ...smell,
   consequences: CONSEQUENCES[smell.slug],
+  flakinessProfile: FLAKINESS_PROFILES[smell.slug],
 }));

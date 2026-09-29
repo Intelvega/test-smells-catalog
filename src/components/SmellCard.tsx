@@ -3,6 +3,7 @@ import { ChevronDown, ScanSearch } from 'lucide-react';
 import type { CategoryMeta, TestSmell } from '../types/testSmell';
 import { ACCENT_CLASSES } from '../data/accentStyles';
 import { CodeComparisonView } from './CodeComparisonView';
+import { CodeBlock } from './CodeBlock';
 import { DetectionRuleModal } from './DetectionRuleModal';
 
 interface SmellCardProps {
@@ -70,6 +71,22 @@ export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps)
           <Section title="Definição teórica">
             <p className="text-sm leading-relaxed text-ink-muted">{smell.definition}</p>
           </Section>
+
+          {smell.flakinessProfile && (
+            <>
+              <Section title="Relação com flakiness">
+                <p className="text-sm leading-relaxed text-ink-muted">{smell.flakinessProfile.explanation}</p>
+                {smell.flakinessProfile.factors.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {smell.flakinessProfile.factors.map((factor) => <span key={factor} className="rounded border border-amber-500/40 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-200">{factor}</span>)}
+                  </div>
+                )}
+              </Section>
+              <Section title="Exemplo de risco de flakiness">
+                <CodeBlock code={smell.flakinessProfile.example} language="javascript" label="Exemplo" accentClass="text-amber-300" />
+              </Section>
+            </>
+          )}
 
           <Section title="Consequências">
             <p className="text-sm leading-relaxed text-ink-muted">{smell.consequences ?? 'Reduz a clareza, a confiabilidade ou a capacidade de manutenção da suíte de testes.'}</p>

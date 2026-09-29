@@ -9,6 +9,13 @@ export type SmellCategory =
 
 export type ImpactLevel = 'Manutenibilidade' | 'Flakiness' | 'Confiabilidade' | 'Legibilidade' | 'Performance';
 export type FlakinessRelation = 'direct' | 'possible' | 'none';
+export type FlakinessFactor = 'tempo' | 'ordem' | 'estado compartilhado' | 'ambiente externo';
+
+export interface FlakinessProfile {
+  factors: FlakinessFactor[];
+  explanation: string;
+  example: string;
+}
 
 export interface CategoryMeta {
   id: SmellCategory;
@@ -46,6 +53,8 @@ export interface TestSmell {
   impact: ImpactLevel[];
   /** Indica se a literatura relaciona o smell a falhas intermitentes. */
   flakiness?: FlakinessRelation;
+  /** Mecanismos e exemplo prático quando há risco de flakiness. */
+  flakinessProfile?: FlakinessProfile;
   definition: string;
   manifestation: string;
   /** Efeito prático mais provável quando o smell permanece no teste. */
