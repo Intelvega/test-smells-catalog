@@ -6,6 +6,8 @@ const STEEL = { authors: 'Jorge, Machado e Andrade', year: 2021, title: 'Steel: 
 const SILVA = { authors: 'Silva', year: 2022, title: 'JavaScript Test Smell Detection Tool' } as const;
 const READTHEDOCS = { authors: 'Alice', year: 2025, title: 'Test Smell in JavaScript (Read the Docs)' } as const;
 const READTHEDOCS_BASE_URL = 'https://test-readthedocss.readthedocs.io/en/latest/Test%20Smells/';
+const OPEN_CATALOG = { authors: 'Soares, Aranda III, Romão e Ribeiro', year: 2023, title: 'The Open Catalog of Test Smells' } as const;
+const OPEN_CATALOG_BASE_URL = 'https://test-smell-catalog.readthedocs.io/en/latest/';
 
 function literatureSmell(input: Omit<TestSmell, 'badExample' | 'goodExample' | 'detectionRule'> & { bad: string; good: string; rule: string }): TestSmell {
   return {
@@ -3874,6 +3876,59 @@ const ACADEMIC_SOURCES_BY_SMELL: Record<string, LiteratureSource[]> = {
   'redundant-assertion': [STEEL],
 };
 
+
+function openCatalogSource(page: string, href: string): LiteratureSource {
+  return {
+    ...OPEN_CATALOG,
+    title: `The Open Catalog of Test Smells — ${page}`,
+    url: new URL(href, OPEN_CATALOG_BASE_URL).href,
+  };
+}
+
+const OPEN_CATALOG_SOURCES_BY_SMELL: Record<string, LiteratureSource[]> = {
+  'assertion-free-test': [openCatalogSource('Assertion-Free', 'Issues%20in%20test%20steps/Issues%20in%20assertions/Assertion-Free.html')],
+  'missing-assertions-line-hitter': [openCatalogSource('Missing Assertions', 'Issues%20in%20test%20steps/Issues%20in%20assertions/Missing%20Assertions.html')],
+  'over-checking-nitpicker': [openCatalogSource('Over-Checking', 'Issues%20in%20test%20steps/Issues%20in%20assertions/Over-Checking.html')],
+  'calculating-expected-results-on-the-fly': [openCatalogSource('Second Guess The Calculation', 'Issues%20in%20test%20steps/Issues%20in%20assertions/Second%20Guess%20The%20Calculation.html')],
+  'under-the-carpet-assertion': [openCatalogSource('Under-The-Carpet Assertion', 'Issues%20in%20test%20steps/Issues%20in%20assertions/Under-The-Carpet%20Assertion.html')],
+  'premature-assertions': [openCatalogSource('Premature Assertions', 'Issues%20in%20test%20steps/Issues%20in%20assertions/Premature%20Assertions.html')],
+  'equality-sledgehammer-assertion': [openCatalogSource('Equality Sledgehammer Assertion', 'Issues%20in%20test%20steps/Issues%20in%20assertions/Equality%20Sledgehammer%20Assertion.html')],
+  'vague-header-setup': [openCatalogSource('Vague Header Setup', 'Issues%20in%20test%20steps/Issues%20in%20setup/Vague%20Header%20Setup.html')],
+  'curdled-test-fixtures': [openCatalogSource('Curdled Test Fixtures', 'Issues%20in%20test%20steps/Issues%20in%20setup/Curdled%20Test%20Fixtures.html')],
+  'excessive-inline-setup': [openCatalogSource('Excessive Inline Setup', 'Issues%20in%20test%20steps/Issues%20in%20setup/Excessive%20Inline%20Setup.html')],
+  'empty-shared-fixture': [openCatalogSource('Empty Shared-Fixture', 'Issues%20in%20test%20steps/Issues%20in%20setup/Empty%20Shared-Fixture.html')],
+  'hidden-test-data-bury-the-lede': [openCatalogSource('Bury The Lede', 'Issues%20in%20test%20steps/Issues%20in%20setup/Bury%20The%20Lede.html')],
+  'the-mother-hen': [openCatalogSource('The Mother Hen', 'Issues%20in%20test%20steps/Issues%20in%20setup/The%20Mother%20Hen.html')],
+  'unused-definition': [openCatalogSource('Unused Definition', 'Issues%20in%20test%20steps/Issues%20in%20setup/Unused%20Definition.html')],
+  'resource-leakage-missing-teardown': [openCatalogSource('Resource Leakage', 'Dependencies/External%20dependencies/Resource%20Leakage.html')],
+  'mystery-guest': [openCatalogSource('Mystery Guest', 'Dependencies/External%20dependencies/Mystery%20Guest.html')],
+  'chain-gang-dependent-test': [openCatalogSource('Chain Gang', 'Dependencies/Dependencies%20among%20tests/Chain%20Gang.html')],
+  'test-pollution-environmental-vandal': [openCatalogSource('Test Pollution', 'Dependencies/Dependencies%20among%20tests/Test%20Pollution.html')],
+  'context-sensitivity': [openCatalogSource('Context Sensitivity', 'Dependencies/External%20dependencies/Context%20Sensitivity.html')],
+  'local-only-testing-the-local-hero': [openCatalogSource('The Local Hero', 'Dependencies/External%20dependencies/The%20Local%20Hero.html')],
+  'web-browsing-test-hidden-integration': [openCatalogSource('Web-Browsing Test', 'Dependencies/External%20dependencies/Web-Browsing%20Test.html')],
+  'counting-on-spies': [openCatalogSource('Counting On Spies', 'Dependencies/External%20dependencies/Counting%20On%20Spies.html')],
+  'middle-man': [openCatalogSource('Middle Man', 'Dependencies/External%20dependencies/Middle%20Man.html')],
+  'programming-paradigms-blend': [openCatalogSource('Programming Paradigms Blend', 'Dependencies/External%20dependencies/Programming%20Paradigms%20Blend.html')],
+  'duplicate-test-code-copy-paste': [openCatalogSource('Duplicate Test Code', 'Code%20related/Code%20duplication/Duplicate%20Test%20Code.html')],
+  'long-test': [openCatalogSource('Long Test', 'Code%20related/Complex%20-%20Hard%20to%20understand/Long%20Test.html')],
+  'complicated-logic-in-tests': [openCatalogSource('Complicated Logic In Tests', 'Code%20related/Complex%20-%20Hard%20to%20understand/Complicated%20Logic%20In%20Tests.html')],
+  'hardcoded-environment-configuration': [openCatalogSource('Hardcoded Environment Configuration', 'Code%20related/Complex%20-%20Hard%20to%20understand/Hardcoded%20Environment%20Configuration.html')],
+  'over-refactoring-overly-dry-tests': [openCatalogSource('Overly Dry Tests', 'Code%20related/Complex%20-%20Hard%20to%20understand/Overly%20Dry%20Tests.html')],
+  'commented-out-test': [openCatalogSource('Commented Test', 'Issues%20in%20test%20steps/Issues%20in%20assertions/Commented%20Test.html')],
+  'flaky-test-intermittent-failures': [openCatalogSource('Flaky Test', 'Code%20related/Violating%20coding%20best%20practices/Flaky%20Test.html')],
+  'chatty-logging-print-statement': [openCatalogSource('Chatty Logging', 'Test%20execution%20-%20behavior/Other%20test%20execution%20-%20behavior/Chatty%20Logging.html')],
+  'interactive-test': [openCatalogSource('Interactive Test', 'Test%20execution%20-%20behavior/Other%20test%20execution%20-%20behavior/Interactive%20Test.html')],
+  'premature-teardown': [openCatalogSource('Improper Clean Up After Tests Have Been Run', 'Issues%20in%20test%20steps/Issues%20in%20teardown/Improper%20Clean%20Up%20After%20Tests%20Have%20Been%20Run.html')],
+  'unsound-test-false-positive-negative': [openCatalogSource('Test Tautology', 'Code%20related/In%20association%20with%20production%20code/Test%20Tautology.html')],
+  'the-silent-catcher-empty-catch': [openCatalogSource('The Silent Catcher', 'Issues%20in%20test%20steps/Issues%20in%20exception%20handling/The%20Silent%20Catcher.html')],
+  'eager-test': [openCatalogSource('Eager Test', 'Test%20semantic-logic/Testing%20many%20things/Eager%20Test.html')],
+  'lazy-test': [openCatalogSource('Lazy Test', 'Test%20semantic-logic/Other%20test%20logic%20related/Lazy%20Test.html')],
+  'what-are-we-testing-poor-naming': [openCatalogSource('What Are We Testing?', 'Code%20related/Complex%20-%20Hard%20to%20understand/What%20Are%20We%20Testing.html')],
+  'testing-private-implementation': [openCatalogSource('Testing Internal Implementation', 'Test%20semantic-logic/Other%20test%20logic%20related/Testing%20Internal%20Implementation.html')],
+  'second-class-citizens': [openCatalogSource('Treating Test Code As A Second Class Citizen', 'Code%20related/Violating%20coding%20best%20practices/Treating%20Test%20Code%20As%20A%20Second%20Class%20Citizen.html')],
+};
+
 function mergeSources(existing: LiteratureSource[] | undefined, additional: LiteratureSource[] | undefined) {
   return [...(existing ?? []), ...(additional ?? [])].filter(
     (source, index, sources) => sources.findIndex((candidate) => candidate.authors === source.authors && candidate.year === source.year && candidate.title === source.title) === index,
@@ -3884,5 +3939,8 @@ export const TEST_SMELLS: TestSmell[] = RAW_TEST_SMELLS.map((smell) => ({
   ...smell,
   consequences: smell.consequences ?? CONSEQUENCES[smell.slug],
   flakinessProfile: FLAKINESS_PROFILES[smell.slug],
-  sources: mergeSources(smell.sources, ACADEMIC_SOURCES_BY_SMELL[smell.slug]),
+  sources: mergeSources(
+    mergeSources(smell.sources, ACADEMIC_SOURCES_BY_SMELL[smell.slug]),
+    OPEN_CATALOG_SOURCES_BY_SMELL[smell.slug],
+  ),
 }));
