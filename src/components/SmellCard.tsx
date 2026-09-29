@@ -92,6 +92,12 @@ export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps)
             <p className="text-sm leading-relaxed text-ink-muted">{smell.consequences ?? 'Reduz a clareza, a confiabilidade ou a capacidade de manutenção da suíte de testes.'}</p>
           </Section>
 
+          {smell.refactoring && (
+            <Section title="Estratégia de refatoração">
+              <p className="text-sm leading-relaxed text-ink-muted">{smell.refactoring}</p>
+            </Section>
+          )}
+
           <Section title="Manifestação no ecossistema JS/TS">
             <p className="text-sm leading-relaxed text-ink-muted">{smell.manifestation}</p>
           </Section>
@@ -103,7 +109,7 @@ export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps)
           {smell.sources && smell.sources.length > 0 && (
             <Section title="Referências">
               <ul className="space-y-1 text-xs leading-relaxed text-ink-muted">
-                {smell.sources.map((source) => <li key={`${source.authors}-${source.year}`}>{source.authors} ({source.year}). <em>{source.title}</em>.</li>)}
+                {smell.sources.map((source) => <li key={`${source.authors}-${source.year}-${source.url ?? source.title}`}>{source.authors} ({source.year}). {source.url ? <a href={source.url} target="_blank" rel="noreferrer" className="text-violet-300 underline underline-offset-2 hover:text-violet-200"><em>{source.title}</em></a> : <em>{source.title}</em>}.</li>)}
               </ul>
             </Section>
           )}

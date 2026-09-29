@@ -9,7 +9,7 @@ export type SmellCategory =
 
 export type ImpactLevel = 'Manutenibilidade' | 'Flakiness' | 'Confiabilidade' | 'Legibilidade' | 'Performance';
 export type FlakinessRelation = 'direct' | 'possible' | 'none';
-export type FlakinessFactor = 'tempo' | 'ordem' | 'estado compartilhado' | 'ambiente externo';
+export type FlakinessFactor = 'tempo' | 'ordem' | 'estado compartilhado' | 'ambiente externo' | 'aleatoriedade';
 
 export interface FlakinessProfile {
   factors: FlakinessFactor[];
@@ -29,6 +29,8 @@ export interface LiteratureSource {
   authors: string;
   year: number;
   title: string;
+  /** Link da fonte web, quando a referência não é uma publicação acadêmica. */
+  url?: string;
 }
 
 export interface CodeExample {
@@ -59,6 +61,8 @@ export interface TestSmell {
   manifestation: string;
   /** Efeito prático mais provável quando o smell permanece no teste. */
   consequences?: string;
+  /** Estratégia objetiva para eliminar ou reduzir o smell. */
+  refactoring?: string;
   badExample: CodeExample;
   goodExample: CodeExample;
   detectionRule: DetectionRule;

@@ -4,6 +4,8 @@ const DISSERTATION = { authors: 'Meneses', year: 2025, title: 'Master’s Disser
 const SNUTS = { authors: 'Oliveira, Mateus, Virgínio e Rocha', year: 2024, title: 'SNUTS.js: Sniffing Nasty Unit Test Smells in Javascript' } as const;
 const STEEL = { authors: 'Jorge, Machado e Andrade', year: 2021, title: 'Steel: Test Smell Detection for JavaScript' } as const;
 const SILVA = { authors: 'Silva', year: 2022, title: 'JavaScript Test Smell Detection Tool' } as const;
+const READTHEDOCS = { authors: 'Alice', year: 2025, title: 'Test Smell in JavaScript (Read the Docs)' } as const;
+const READTHEDOCS_BASE_URL = 'https://test-readthedocss.readthedocs.io/en/latest/Test%20Smells/';
 
 function literatureSmell(input: Omit<TestSmell, 'badExample' | 'goodExample' | 'detectionRule'> & { bad: string; good: string; rule: string }): TestSmell {
   return {
@@ -19,8 +21,20 @@ function literatureSmell(input: Omit<TestSmell, 'badExample' | 'goodExample' | '
   };
 }
 
+function readTheDocsSmell(input: Omit<TestSmell, 'badExample' | 'goodExample' | 'detectionRule' | 'sources'> & { bad: string; good: string; rule: string; href: string }): TestSmell {
+  return {
+    ...literatureSmell({ ...input, sources: [{ ...READTHEDOCS, url: new URL(input.href, READTHEDOCS_BASE_URL).href }] }),
+    detectionRule: {
+      name: input.rule,
+      description: 'Heurística estática para localizar a construção indicada na página de referência do ReadTheDocs.',
+      pseudocode: 'ON arquivo de teste: identificar a construção AST associada, reportar o teste e apontar a estratégia de refatoração.',
+      tool: 'ESLint Rule (Babel AST)',
+    },
+  };
+}
+
 /**
- * Base de dados com os 66 test smells de JavaScript/TypeScript.
+ * Base de dados do catálogo de test smells em JavaScript/TypeScript.
  * Organizada em 6 categorias, na ordem do catálogo acadêmico de referência.
  */
 
@@ -2710,10 +2724,1124 @@ test('atualiza nome do usuário', () => {
     good: "test('remove usuário', () => { expect(removeUser(1)).toBe(true); });",
     rule: 'empty-test-callback', tags: ['vazio', 'cobertura', 'execução'], sources: [STEEL]
   }),
+  readTheDocsSmell({
+    id: 67, slug: 'readthedocs-only-test', name: 'Only Test', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Only Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Only Test', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-only-test', href: 'only_test.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 68, slug: 'readthedocs-non-deterministic-data-test', name: 'Non-deterministic Data Test', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Non-deterministic Data Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: dados aleatórios ou relógios não controlados podem alterar o resultado entre execuções. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Non-deterministic Data Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-non-deterministic-data-test', href: 'non_deterministic_data_test.html',
+    flakinessProfile: { factors: ["aleatoriedade"], explanation: 'Dados aleatórios ou relógios não controlados podem alterar o resultado entre execuções.', example: "test('Non-deterministic Data Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 69, slug: 'readthedocs-assertion-loop', name: 'Assertion Loop', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Assertion Loop”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Assertion Loop', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-assertion-loop', href: 'assertion_loop.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 70, slug: 'readthedocs-return-in-test', name: 'Return in Test', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Return in Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Return in Test', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-return-in-test', href: 'return_in_test.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 71, slug: 'readthedocs-resource-optmism-test', name: 'Resource Optimism', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Resource Optimism”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: a disponibilidade de arquivos, banco de dados ou rede varia entre máquinas e execuções. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Resource Optimism', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-resource-optmism-test', href: 'resource_optmism_test.html',
+    flakinessProfile: { factors: ["ambiente externo"], explanation: 'A disponibilidade de arquivos, banco de dados ou rede varia entre máquinas e execuções.', example: "test('Resource Optimism', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 72, slug: 'readthedocs-army-of-clones', name: 'Army of Clones Test', aka: [], category: 'duplication', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Army of Clones Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Remova a repetição e extraia somente a intenção comum, mantendo cada cenário legível de forma independente.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Army of Clones Test', () => {\n  const result = subject.execute(input);\n  expect(result).toEqual(expected);\n  expect(result).toEqual(expected);\n});", good: "test('documenta uma expectativa por comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-army-of-clones', href: 'army_of_clones.html',
+    tags: ['readthedocs', 'duplication']
+  }),
+  readTheDocsSmell({
+    id: 73, slug: 'readthedocs-assertion-chorus-test', name: 'Assertion Chorus Test', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Assertion Chorus Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Assertion Chorus Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-assertion-chorus-test', href: 'assertion_chorus_test.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 74, slug: 'readthedocs-duplicate-statements-test', name: 'Duplicate Statements Test', aka: [], category: 'duplication', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Duplicate Statements Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Remova a repetição e extraia somente a intenção comum, mantendo cada cenário legível de forma independente.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Duplicate Statements Test', () => {\n  const result = subject.execute(input);\n  expect(result).toEqual(expected);\n  expect(result).toEqual(expected);\n});", good: "test('documenta uma expectativa por comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-duplicate-statements-test', href: 'duplicate_statements_test.html',
+    tags: ['readthedocs', 'duplication']
+  }),
+  readTheDocsSmell({
+    id: 75, slug: 'readthedocs-duplicated-actions', name: 'Duplicated Actions', aka: [], category: 'duplication', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Duplicated Actions”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Remova a repetição e extraia somente a intenção comum, mantendo cada cenário legível de forma independente.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Duplicated Actions', () => {\n  const result = subject.execute(input);\n  expect(result).toEqual(expected);\n  expect(result).toEqual(expected);\n});", good: "test('documenta uma expectativa por comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-duplicated-actions', href: 'duplicated_actions.html',
+    tags: ['readthedocs', 'duplication']
+  }),
+  readTheDocsSmell({
+    id: 76, slug: 'readthedocs-duplicated-code-in-conditional', name: 'Duplicated Code in Conditional', aka: [], category: 'duplication', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Duplicated Code in Conditional”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Remova a repetição e extraia somente a intenção comum, mantendo cada cenário legível de forma independente.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Duplicated Code in Conditional', () => {\n  const result = subject.execute(input);\n  expect(result).toEqual(expected);\n  expect(result).toEqual(expected);\n});", good: "test('documenta uma expectativa por comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-duplicated-code-in-conditional', href: 'duplicated_code_in_conditional.html',
+    tags: ['readthedocs', 'duplication']
+  }),
+  readTheDocsSmell({
+    id: 77, slug: 'readthedocs-half-a-helper-method', name: 'Half a Helper Method', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Half a Helper Method”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Half a Helper Method', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-half-a-helper-method', href: 'half_a_helper_method.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 78, slug: 'readthedocs-missing-test-data-factory', name: 'Missing Test Data Factory', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Missing Test Data Factory”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Missing Test Data Factory', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-missing-test-data-factory', href: 'missing_test_data_factory.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 79, slug: 'readthedocs-test-redundancy', name: 'Test Redundancy', aka: [], category: 'duplication', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Test Redundancy”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Remova a repetição e extraia somente a intenção comum, mantendo cada cenário legível de forma independente.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Test Redundancy', () => {\n  const result = subject.execute(input);\n  expect(result).toEqual(expected);\n  expect(result).toEqual(expected);\n});", good: "test('documenta uma expectativa por comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-test-redundancy', href: 'test_redundancy.html',
+    tags: ['readthedocs', 'duplication']
+  }),
+  readTheDocsSmell({
+    id: 80, slug: 'readthedocs-the-first-and-last-rites', name: 'The First and Last Rites', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “The First and Last Rites”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('The First and Last Rites', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-the-first-and-last-rites', href: 'the_first_and_last_rites.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 81, slug: 'readthedocs-two-for-the-price-of-one', name: 'Two for the Price of One', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Two for the Price of One”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Two for the Price of One', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-two-for-the-price-of-one', href: 'two_for_the_price_of_one.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 82, slug: 'readthedocs-hard-coded-values', name: 'Hard-Coded Values', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Hard-Coded Values”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Hard-Coded Values', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-hard-coded-values', href: 'hard_coded_values.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 83, slug: 'readthedocs-hardcoded-literals', name: 'Hardcoded Literals', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Hardcoded Literals”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Hardcoded Literals', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-hardcoded-literals', href: 'hardcoded_literals.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 84, slug: 'readthedocs-hidden-complexity', name: 'Hidden Complexity', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Hidden Complexity”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Hidden Complexity', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-hidden-complexity', href: 'hidden_complexity.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 85, slug: 'readthedocs-large-module', name: 'Large Module', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Large Module”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Large Module', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-large-module', href: 'large_module.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 86, slug: 'readthedocs-long-class', name: 'Long Class', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Long Class”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Long Class', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-long-class', href: 'long_class.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 87, slug: 'readthedocs-long-method', name: 'Long Function or Long Method', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Long Function or Long Method”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Long Function or Long Method', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-long-method', href: 'long_method.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 88, slug: 'readthedocs-self-important-test-data', name: 'Self Important Test Data', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Self Important Test Data”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Self Important Test Data', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-self-important-test-data', href: 'self_important_test_data.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 89, slug: 'readthedocs-using-complicated-path', name: 'Using Complicated X-Path or CSS Selectors', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Using Complicated X-Path or CSS Selectors”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Using Complicated X-Path or CSS Selectors', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-using-complicated-path', href: 'using_complicated_path.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 90, slug: 'readthedocs-disorder', name: 'Disorder', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Disorder”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Disorder', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-disorder', href: 'disorder.html',
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 91, slug: 'readthedocs-undefined-test', name: 'Undefined Test', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Undefined Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Undefined Test', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-undefined-test', href: 'undefined_test.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 92, slug: 'readthedocs-the-distant-relative', name: 'The Distant Relative', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “The Distant Relative”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('The Distant Relative', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-the-distant-relative', href: 'the_distant_relative.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 93, slug: 'readthedocs-assert-the-world', name: 'Assert the World', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Assert the World”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Assert the World', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-assert-the-world', href: 'assert_the_world.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 94, slug: 'readthedocs-field-level-assertion', name: 'Field-Level Assertion', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Field-Level Assertion”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Field-Level Assertion', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-field-level-assertion', href: 'field_level_assertion.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 95, slug: 'readthedocs-method-based-testing', name: 'Method-Based Testing', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Method-Based Testing”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Method-Based Testing', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-method-based-testing', href: 'method_based_testing.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 96, slug: 'readthedocs-existing-tests', name: 'Existing Tests', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Existing Tests”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Existing Tests', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-existing-tests', href: 'existing_tests.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 97, slug: 'readthedocs-split-logic', name: 'Split Logic', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Split Logic”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Split Logic', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-split-logic', href: 'split_logic.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 98, slug: 'readthedocs-abnormal', name: 'Abnormal UTF-Use', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Abnormal UTF-Use”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Abnormal UTF-Use', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-abnormal', href: 'abnormal.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 99, slug: 'readthedocs-frequent-debugging', name: 'Frequent Debugging', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Frequent Debugging”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Frequent Debugging', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-frequent-debugging', href: 'frequent_debugging.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 100, slug: 'readthedocs-asynchronous-test', name: 'Asynchronous Test', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Asynchronous Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: a conclusão de operações assíncronas depende de agendamento e pode ocorrer depois da asserção. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Asynchronous Test', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-asynchronous-test', href: 'asynchronous_test.html',
+    flakinessProfile: { factors: ["tempo"], explanation: 'A conclusão de operações assíncronas depende de agendamento e pode ocorrer depois da asserção.', example: "test('Asynchronous Test', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 101, slug: 'readthedocs-inefficient-waits', name: 'Inefficient Waits', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Inefficient Waits”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: esperas arbitrárias podem ser insuficientes sob carga ou excessivas quando o ambiente está rápido. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Inefficient Waits', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-inefficient-waits', href: 'inefficient_waits.html',
+    flakinessProfile: { factors: ["tempo"], explanation: 'Esperas arbitrárias podem ser insuficientes sob carga ou excessivas quando o ambiente está rápido.', example: "test('Inefficient Waits', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 102, slug: 'readthedocs-constrained-test-order', name: 'Constrained Test Order', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Constrained Test Order”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: o resultado depende de uma sequência específica e do estado deixado por outros testes. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Constrained Test Order', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-constrained-test-order', href: 'constrained_test_order.html',
+    flakinessProfile: { factors: ["ordem","estado compartilhado"], explanation: 'O resultado depende de uma sequência específica e do estado deixado por outros testes.', example: "test('Constrained Test Order', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 103, slug: 'readthedocs-coupling-between-test-methods', name: 'Coupling Between Test Methods', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Coupling Between Test Methods”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: métodos de teste acoplados compartilham pré-condições e falham se a ordem mudar. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Coupling Between Test Methods', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-coupling-between-test-methods', href: 'coupling_between_test_methods.html',
+    flakinessProfile: { factors: ["ordem","estado compartilhado"], explanation: 'Métodos de teste acoplados compartilham pré-condições e falham se a ordem mudar.', example: "test('Coupling Between Test Methods', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 104, slug: 'readthedocs-dependent-test', name: 'Dependent Test', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Dependent Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: um teste depende do efeito colateral de outro, tornando a suíte sensível à ordem. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Dependent Test', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-dependent-test', href: 'dependent_test.html',
+    flakinessProfile: { factors: ["ordem","estado compartilhado"], explanation: 'Um teste depende do efeito colateral de outro, tornando a suíte sensível à ordem.', example: "test('Dependent Test', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 105, slug: 'readthedocs-lack-of-cohesion', name: 'Lack of Cohesion of Test Cases', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Lack of Cohesion of Test Cases”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Lack of Cohesion of Test Cases', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-lack-of-cohesion', href: 'lack_of_cohesion.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 106, slug: 'readthedocs-litter-bugs', name: 'Litter Bugs', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Litter Bugs”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: arquivos, variáveis ou dados não removidos contaminam execuções posteriores. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Litter Bugs', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-litter-bugs', href: 'litter_bugs.html',
+    flakinessProfile: { factors: ["estado compartilhado"], explanation: 'Arquivos, variáveis ou dados não removidos contaminam execuções posteriores.', example: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Litter Bugs', () => expect(subject.execute(shared)).toBeTruthy());" },
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 107, slug: 'readthedocs-lonely-test', name: 'Lonely Test', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Lonely Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Lonely Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-lonely-test', href: 'lonely_test.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 108, slug: 'readthedocs-test-run-war', name: 'Test Run War', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Test Run War”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: execuções concorrentes disputam recursos ou dados e interferem umas nas outras. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Test Run War', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-test-run-war', href: 'test_run_war.html',
+    flakinessProfile: { factors: ["estado compartilhado"], explanation: 'Execuções concorrentes disputam recursos ou dados e interferem umas nas outras.', example: "test('Test Run War', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 109, slug: 'readthedocs-unusual-test-order', name: 'Unusual Test Order', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Unusual Test Order”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Unusual Test Order', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-unusual-test-order', href: 'unusual_test_order.html',
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 110, slug: 'readthedocs-data-sensitivity', name: 'Data Sensitivity', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Data Sensitivity”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: dados de localidade, codificação ou configuração mudam entre ambientes. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Data Sensitivity', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-data-sensitivity', href: 'data_sensitivity.html',
+    flakinessProfile: { factors: ["ambiente externo"], explanation: 'Dados de localidade, codificação ou configuração mudam entre ambientes.', example: "test('Data Sensitivity', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 111, slug: 'readthedocs-hidden-dependency', name: 'Hidden Dependency', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Hidden Dependency”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: uma dependência não declarada pode estar disponível localmente e ausente na ci. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Hidden Dependency', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-hidden-dependency', href: 'hidden_dependency.html',
+    flakinessProfile: { factors: ["ambiente externo"], explanation: 'Uma dependência não declarada pode estar disponível localmente e ausente na CI.', example: "test('Hidden Dependency', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 112, slug: 'readthedocs-the-operating-system-evangelist', name: 'The Operating System Evangelist', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “The Operating System Evangelist”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: o comportamento depende do sistema operacional, caminhos ou comandos disponíveis. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('The Operating System Evangelist', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-the-operating-system-evangelist', href: 'the_operating_system_evangelist.html',
+    flakinessProfile: { factors: ["ambiente externo"], explanation: 'O comportamento depende do sistema operacional, caminhos ou comandos disponíveis.', example: "test('The Operating System Evangelist', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 113, slug: 'readthedocs-branch-to-assumption-anti-pattern', name: 'Branch To Assumption Anti-Pattern', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Branch To Assumption Anti-Pattern”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Branch To Assumption Anti-Pattern', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-branch-to-assumption-anti-pattern', href: 'branch_to_assumption_anti_pattern.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 114, slug: 'readthedocs-chafing', name: 'Chafing', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Chafing”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Chafing', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-chafing', href: 'chafing.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 115, slug: 'readthedocs-contaminated-test-subject', name: 'Contaminated Test Subject', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Contaminated Test Subject”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: o sujeito sob teste já alterado produz resultados diferentes conforme o histórico de uso. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Contaminated Test Subject', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-contaminated-test-subject', href: 'contaminated_test_subject.html',
+    flakinessProfile: { factors: ["estado compartilhado"], explanation: 'O sujeito sob teste já alterado produz resultados diferentes conforme o histórico de uso.', example: "test('Contaminated Test Subject', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 116, slug: 'readthedocs-evolve-or', name: 'Evolve Or', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Evolve Or”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Evolve Or', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-evolve-or', href: 'evolve_or.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 117, slug: 'readthedocs-flexible-test', name: 'Flexible Test', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Flexible Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Flexible Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-flexible-test', href: 'flexible_test.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 118, slug: 'readthedocs-fully-gotten-green-test', name: 'Fully Rotten Green Test', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Fully Rotten Green Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Fully Rotten Green Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-fully-gotten-green-test', href: 'fully_gotten_green_test.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 119, slug: 'readthedocs-generative', name: 'Generative', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Generative”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Generative', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-generative', href: 'generative.html',
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 120, slug: 'readthedocs-happy-path', name: 'Happy Path', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Happy Path”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Happy Path', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-happy-path', href: 'happy_path.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 121, slug: 'readthedocs-indecisive', name: 'Indecisive', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Indecisive”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Indecisive', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-indecisive', href: 'indecisive.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 122, slug: 'readthedocs-multiple-test-conditions', name: 'Multiple Test Conditions', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Multiple Test Conditions”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Multiple Test Conditions', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-multiple-test-conditions', href: 'multiple_test_conditions.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 123, slug: 'readthedocs-parsed-data', name: 'Parsed Data', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Parsed Data”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Parsed Data', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-parsed-data', href: 'parsed_data.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 124, slug: 'readthedocs-paranoid', name: 'Paranoid', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Paranoid”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Paranoid', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-paranoid', href: 'paranoid.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 125, slug: 'readthedocs-quixotic', name: 'Quixotic', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Quixotic”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Quixotic', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-quixotic', href: 'quixotic.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 126, slug: 'readthedocs-rotten-green-test', name: 'Rotten Green Test', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Rotten Green Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Rotten Green Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-rotten-green-test', href: 'rotten_green_test.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 127, slug: 'readthedocs-skip-rotten-green-test', name: 'Skip Rotten Green Test', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Skip Rotten Green Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Skip Rotten Green Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-skip-rotten-green-test', href: 'skip_rotten_green_test.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 128, slug: 'readthedocs-tangential', name: 'Tangential', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Tangential”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Tangential', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-tangential', href: 'tangential.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 129, slug: 'readthedocs-test-by-number', name: 'Test By Number', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Test By Number”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Test By Number', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-test-by-number', href: 'test_by_number.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 130, slug: 'readthedocs-the-ugly-mirror', name: 'The Ugly Mirror', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “The Ugly Mirror”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('The Ugly Mirror', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-the-ugly-mirror', href: 'the_ugly_mirror.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 131, slug: 'readthedocs-mock-everything', name: 'Mock Everything', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Mock Everything”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Mock Everything', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-mock-everything', href: 'mock_everything.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 132, slug: 'readthedocs-excessive-mocking', name: 'Excessive Mocking', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Excessive Mocking”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Excessive Mocking', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-excessive-mocking', href: 'excessive_mocking.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 133, slug: 'readthedocs-mocking-framework', name: 'Mocking a Mocking Framework', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Mocking a Mocking Framework”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Mocking a Mocking Framework', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-mocking-framework', href: 'mocking_framework.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 134, slug: 'readthedocs-remote-control-mocking', name: 'Remote Control Mocking', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Remote Control Mocking”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Remote Control Mocking', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-remote-control-mocking', href: 'remote_control_mocking.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 135, slug: 'readthedocs-blethery-prefixes', name: 'Blethery Prefixes', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Blethery Prefixes”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Blethery Prefixes', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-blethery-prefixes', href: 'blethery_prefixes.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 136, slug: 'readthedocs-constant-actual-parameter-value', name: 'Constant Actual Parameter Value', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Constant Actual Parameter Value”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Constant Actual Parameter Value', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-constant-actual-parameter-value', href: 'constant_actual_parameter_value.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 137, slug: 'readthedocs-empty-method', name: 'Empty Method', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Empty Method”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Empty Method', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-empty-method', href: 'empty_method.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 138, slug: 'readthedocs-everything-is-property', name: 'Everything Is A Property', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Everything Is A Property”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Everything Is A Property', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-everything-is-property', href: 'everything_is_property.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 139, slug: 'readthedocs-hidden-test-call', name: 'Hidden Test Call', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Hidden Test Call”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Hidden Test Call', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-hidden-test-call', href: 'hidden_test_call.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 140, slug: 'readthedocs-long-parameter-list', name: 'Long Parameter List', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Long Parameter List”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Long Parameter List', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-long-parameter-list', href: 'long_parameter_list.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 141, slug: 'readthedocs-missed-skip-rotten-green-test', name: 'Missed Skip Rotten Green Test', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Missed Skip Rotten Green Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Missed Skip Rotten Green Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-missed-skip-rotten-green-test', href: 'missed_skip_rotten_green_test.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 142, slug: 'readthedocs-mistaken-identity', name: 'Mistaken Identity', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Mistaken Identity”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Mistaken Identity', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-mistaken-identity', href: 'mistaken_identity.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 143, slug: 'readthedocs-overreferencing', name: 'Overreferencing', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Overreferencing”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Overreferencing', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-overreferencing', href: 'overreferencing.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 144, slug: 'readthedocs-stop-in-function', name: 'Stop in Function', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Stop in Function”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Stop in Function', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-stop-in-function', href: 'stop_in_function.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 145, slug: 'readthedocs-test-body-is-somewhere-else', name: 'Test Body Is Somewhere Else', aka: [], category: 'execution', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Test Body Is Somewhere Else”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Test Body Is Somewhere Else', () => {\n  subject.execute(input);\n});", good: "test('executa e verifica um comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-test-body-is-somewhere-else', href: 'test_body_is_somewhere_else.html',
+    tags: ['readthedocs', 'execution']
+  }),
+  readTheDocsSmell({
+    id: 146, slug: 'readthedocs-the-stepford-fields', name: 'The Stepford Fields', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “The Stepford Fields”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('The Stepford Fields', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-the-stepford-fields', href: 'the_stepford_fields.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 147, slug: 'readthedocs-time-bomb-data', name: 'Time Bomb Data', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Time Bomb Data”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: datas fixas expiram ou passam a representar um contexto inválido com o tempo. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Time Bomb Data', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-time-bomb-data', href: 'time_bomb_data.html',
+    flakinessProfile: { factors: ["tempo"], explanation: 'Datas fixas expiram ou passam a representar um contexto inválido com o tempo.', example: "test('Time Bomb Data', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 148, slug: 'readthedocs-time-bombs', name: 'Time Bombs', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Time Bombs”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: o teste só falha depois de uma data, prazo ou condição temporal específica. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Time Bombs', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-time-bombs', href: 'time_bombs.html',
+    flakinessProfile: { factors: ["tempo"], explanation: 'O teste só falha depois de uma data, prazo ou condição temporal específica.', example: "test('Time Bombs', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 149, slug: 'readthedocs-time-sensitive-test', name: 'Time Sensitive Test', aka: [], category: 'dependencies', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Time Sensitive Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: a execução varia conforme fuso, relógio do sistema ou instante da execução. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Isole a dependência por stub, fake ou recurso controlado; sincronize por eventos e restaure o estado ao final.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Time Sensitive Test', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});", good: "test('isola a dependência e aguarda o evento', async () => {\n  const result = await subject.execute(dependencyStub);\n  expect(result).toEqual(expected);\n});", rule: 'readthedocs-time-sensitive-test', href: 'time_sensitive_test.html',
+    flakinessProfile: { factors: ["tempo"], explanation: 'A execução varia conforme fuso, relógio do sistema ou instante da execução.', example: "test('Time Sensitive Test', async () => {\n  const result = await subject.execute();\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'dependencies']
+  }),
+  readTheDocsSmell({
+    id: 150, slug: 'readthedocs-unrestricted-imports', name: 'Unrestricted Imports', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Unrestricted Imports”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Unrestricted Imports', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-unrestricted-imports', href: 'unrestricted_imports.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 151, slug: 'readthedocs-unused-imports', name: 'Unused Imports', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Unused Imports”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Unused Imports', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-unused-imports', href: 'unused_imports.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 152, slug: 'readthedocs-unused-inputs', name: 'Unused Inputs', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Unused Inputs”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Unused Inputs', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-unused-inputs', href: 'unused_inputs.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 153, slug: 'readthedocs-complex-teardown', name: 'Complex Teardown', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Complex Teardown”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: limpeza complexa pode terminar fora de ordem e deixar estado para o próximo teste. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Complex Teardown', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-complex-teardown', href: 'complex_teardown.html',
+    flakinessProfile: { factors: ["tempo","estado compartilhado"], explanation: 'Limpeza complexa pode terminar fora de ordem e deixar estado para o próximo teste.', example: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Complex Teardown', () => expect(subject.execute(shared)).toBeTruthy());" },
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 154, slug: 'readthedocs-generous-leftovers', name: 'Generous Leftovers', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Generous Leftovers”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: artefatos deixados por cenários anteriores podem alterar a entrada dos próximos testes. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Generous Leftovers', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-generous-leftovers', href: 'generous_leftovers.html',
+    flakinessProfile: { factors: ["estado compartilhado"], explanation: 'Artefatos deixados por cenários anteriores podem alterar a entrada dos próximos testes.', example: "test('Generous Leftovers', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 155, slug: 'readthedocs-shared-state-corruption', name: 'Shared-State Corruption', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Shared-State Corruption”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: estado mutável compartilhado faz o resultado depender de quem executou antes. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Shared-State Corruption', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-shared-state-corruption', href: 'shared_state_corruption.html',
+    flakinessProfile: { factors: ["estado compartilhado","ordem"], explanation: 'Estado mutável compartilhado faz o resultado depender de quem executou antes.', example: "test('Shared-State Corruption', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 156, slug: 'readthedocs-teardown-only-test', name: 'Teardown Only Test', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Teardown Only Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: a limpeza isolada pode alterar recursos usados por outros cenários. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Teardown Only Test', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-teardown-only-test', href: 'teardown_only_test.html',
+    flakinessProfile: { factors: ["estado compartilhado"], explanation: 'A limpeza isolada pode alterar recursos usados por outros cenários.', example: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Teardown Only Test', () => expect(subject.execute(shared)).toBeTruthy());" },
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 157, slug: 'readthedocs-the-painful-clean-up', name: 'The Painful Clean-Up', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “The Painful Clean-Up”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: limpezas manuais e extensas são fáceis de executar parcialmente ou tarde demais. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('The Painful Clean-Up', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-the-painful-clean-up', href: 'the_painful_clean_up.html',
+    flakinessProfile: { factors: ["tempo","estado compartilhado"], explanation: 'Limpezas manuais e extensas são fáceis de executar parcialmente ou tarde demais.', example: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('The Painful Clean-Up', () => expect(subject.execute(shared)).toBeTruthy());" },
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 158, slug: 'readthedocs-the-soloist', name: 'The Soloist', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “The Soloist”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('The Soloist', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-the-soloist', href: 'the_soloist.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 159, slug: 'readthedocs-exception-catch-throw', name: 'Exception Catch/Throw', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Exception Catch/Throw”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Exception Catch/Throw', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-exception-catch-throw', href: 'exception_catch_throw.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 160, slug: 'readthedocs-exception-catching-throwing', name: 'Exception Catching Throwing', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Exception Catching Throwing”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Exception Catching Throwing', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-exception-catching-throwing', href: 'exception_catching_throwing.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 161, slug: 'readthedocs-expecting-exceptions-anywhere', name: 'Expecting Exceptions Anywhere', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Expecting Exceptions Anywhere”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Expecting Exceptions Anywhere', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-expecting-exceptions-anywhere', href: 'expecting_exceptions_anywhere.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 162, slug: 'readthedocs-issues-in-exception-handling', name: 'Issues In Exception Handling', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Issues In Exception Handling”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Issues In Exception Handling', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-issues-in-exception-handling', href: 'issues_in_exception_handling.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 163, slug: 'readthedocs-excessive-setup', name: 'Excessive Setup', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Excessive Setup”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Excessive Setup', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-excessive-setup', href: 'excessive_setup.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 164, slug: 'readthedocs-factories-unnecessary-data', name: 'Factories That Contain Unnecessary Data', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Factories That Contain Unnecessary Data”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Factories That Contain Unnecessary Data', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-factories-unnecessary-data', href: 'factories_unnecessary_data.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 165, slug: 'readthedocs-noisy-logging', name: 'Noisy Logging', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Noisy Logging”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Noisy Logging', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-noisy-logging', href: 'noisy_logging.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 166, slug: 'readthedocs-noisy-setup', name: 'Noisy Setup', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Noisy Setup”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Noisy Setup', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-noisy-setup', href: 'noisy_setup.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 167, slug: 'readthedocs-obscure-in-line-setup', name: 'Obscure In-Line Setup', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Obscure In-Line Setup”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Obscure In-Line Setup', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-obscure-in-line-setup', href: 'obscure_in_line_setup.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 168, slug: 'readthedocs-oversharing-on-setup', name: 'Oversharing On Setup', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Oversharing On Setup”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Oversharing On Setup', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-oversharing-on-setup', href: 'oversharing_on_setup.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 169, slug: 'readthedocs-refused-bequest', name: 'Refused Bequest', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Refused Bequest”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Refused Bequest', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-refused-bequest', href: 'refused_bequest.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 170, slug: 'readthedocs-share-the-world', name: 'Share The World', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Share The World”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: um fixture grande e compartilhado cria interações ocultas entre cenários. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Share The World', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-share-the-world', href: 'share_the_world.html',
+    flakinessProfile: { factors: ["estado compartilhado"], explanation: 'Um fixture grande e compartilhado cria interações ocultas entre cenários.', example: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Share The World', () => expect(subject.execute(shared)).toBeTruthy());" },
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 171, slug: 'readthedocs-test-maverick', name: 'Test Maverick', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Test Maverick”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Test Maverick', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-test-maverick', href: 'test_maverick.html',
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 172, slug: 'readthedocs-test-objects-initialized-in-a-describe-block', name: 'Test Objects Initialized In A Describe Block', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Test Objects Initialized In A Describe Block”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: o mesmo objeto é reutilizado por testes e mutações vazam entre cenários. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Test Objects Initialized In A Describe Block', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-test-objects-initialized-in-a-describe-block', href: 'test_objects_initialized_in_a_describe_block.html',
+    flakinessProfile: { factors: ["estado compartilhado","ordem"], explanation: 'O mesmo objeto é reutilizado por testes e mutações vazam entre cenários.', example: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Test Objects Initialized In A Describe Block', () => expect(subject.execute(shared)).toBeTruthy());" },
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 173, slug: 'readthedocs-test-objects-initialized-in-each-test', name: 'Test Objects Initialized In Each Test', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Test Objects Initialized In Each Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Test Objects Initialized In Each Test', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-test-objects-initialized-in-each-test', href: 'test_objects_initialized_in_each_test.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 174, slug: 'readthedocs-test-setup-is-somewhere-else', name: 'Test Setup Is Somewhere Else', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Test Setup Is Somewhere Else”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Test Setup Is Somewhere Else', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-test-setup-is-somewhere-else', href: 'test_setup_is_somewhere_else.html',
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 175, slug: 'readthedocs-using-fixtures', name: 'Using Fixtures', aka: [], category: 'fixtures', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Using Fixtures”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: fixtures compartilhadas e grandes podem carregar estado inesperado entre testes. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reduza o setup ao mínimo necessário, crie dados explícitos por cenário e preserve o isolamento entre testes.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Using Fixtures', () => expect(subject.execute(shared)).toBeTruthy());", good: "test('executa com dados mínimos', () => {\n  const fixture = createFixture({ needed: true });\n  expect(subject.execute(fixture)).toEqual(expected);\n});", rule: 'readthedocs-using-fixtures', href: 'using_fixtures.html',
+    flakinessProfile: { factors: ["estado compartilhado"], explanation: 'Fixtures compartilhadas e grandes podem carregar estado inesperado entre testes.', example: "let shared;\nbeforeEach(() => { shared = createLargeFixture(); });\ntest('Using Fixtures', () => expect(subject.execute(shared)).toBeTruthy());" },
+    tags: ['readthedocs', 'fixtures']
+  }),
+  readTheDocsSmell({
+    id: 176, slug: 'readthedocs-layer-testing', name: 'Layer Testing', aka: [], category: 'semantics', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'possible',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Layer Testing”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Pode tornar o resultado intermitente: múltiplas camadas e dependências indiretas tornam o cenário sujeito a latência e falhas externas. Também dificulta diagnosticar a causa real da falha.',
+    refactoring: 'Reescreva o caso com uma intenção única, estrutura Arrange–Act–Assert e nomes que expressem o comportamento esperado.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Layer Testing', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('descreve e verifica o comportamento', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-layer-testing', href: 'layer_testing.html',
+    flakinessProfile: { factors: ["ambiente externo","tempo"], explanation: 'Múltiplas camadas e dependências indiretas tornam o cenário sujeito a latência e falhas externas.', example: "test('Layer Testing', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});" },
+    tags: ['readthedocs', 'semantics']
+  }),
+  readTheDocsSmell({
+    id: 177, slug: 'readthedocs-asserting-pre-condition-and-invariants', name: 'Asserting Pre-Condition And Invariants', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Asserting Pre-Condition And Invariants”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Asserting Pre-Condition And Invariants', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-asserting-pre-condition-and-invariants', href: 'asserting_pre_condition_and_invariants.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 178, slug: 'readthedocs-assertion-diversion', name: 'Assertion Diversion', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Assertion Diversion”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Assertion Diversion', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-assertion-diversion', href: 'assertion_diversion.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 179, slug: 'readthedocs-brittle-assertion', name: 'Brittle-Assertion', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Brittle-Assertion”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Brittle-Assertion', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-brittle-assertion', href: 'brittle_assertion.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 180, slug: 'readthedocs-broad-assertion', name: 'Broad Assertion', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Broad Assertion”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Broad Assertion', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-broad-assertion', href: 'broad_assertion.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 181, slug: 'readthedocs-fantasy-tests', name: 'Fantasy Tests', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Fantasy Tests”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Fantasy Tests', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-fantasy-tests', href: 'fantasy_tests.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 182, slug: 'readthedocs-invisible-assertions', name: 'Invisible Assertions', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Invisible Assertions”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Invisible Assertions', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-invisible-assertions', href: 'invisible_assertions.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 183, slug: 'readthedocs-missed-fail-rotten-green-test', name: 'Missed Fail Rotten Green Test', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Missed Fail Rotten Green Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Missed Fail Rotten Green Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-missed-fail-rotten-green-test', href: 'missed_fail_rotten_green_test.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 184, slug: 'readthedocs-missing-assertions', name: 'Missing Assertions', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Missing Assertions”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Missing Assertions', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-missing-assertions', href: 'missing_assertions.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 185, slug: 'readthedocs-over-exertion-assertion', name: 'Over Exertion Assertion', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Over Exertion Assertion”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Over Exertion Assertion', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-over-exertion-assertion', href: 'over_exertion_assertion.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 186, slug: 'readthedocs-returning-assertion', name: 'Returning Assertion', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Returning Assertion”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Returning Assertion', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-returning-assertion', href: 'returning_assertion.html',
+    tags: ['readthedocs', 'assertions']
+  }),
+  readTheDocsSmell({
+    id: 187, slug: 'readthedocs-self-test', name: 'Self-Test', aka: [], category: 'assertions', impact: ['Manutenibilidade', 'Confiabilidade'], flakiness: 'none',
+    definition: 'Padrão de teste descrito no catálogo ReadTheDocs como “Self-Test”. Ele introduz uma estrutura, dependência ou verificação que torna o caso menos claro, isolado ou confiável.',
+    consequences: 'Reduz a clareza e a confiabilidade da suíte, elevando o custo para diagnosticar falhas e manter o cenário.',
+    refactoring: 'Substitua verificações genéricas por uma expectativa pequena, explícita e ligada ao comportamento do cenário.',
+    manifestation: 'A presença do padrão pode ser localizada no AST de callbacks de teste, hooks ou declarações relacionadas ao cenário.',
+    bad: "test('Self-Test', () => {\n  const result = subject.execute(input);\n  expect(result).toBeTruthy();\n});", good: "test('verifica o resultado esperado', () => {\n  expect(subject.execute(input)).toEqual(expected);\n});", rule: 'readthedocs-self-test', href: 'self_test.html',
+    tags: ['readthedocs', 'assertions']
+  })
 ];
 
 export const TEST_SMELLS: TestSmell[] = RAW_TEST_SMELLS.map((smell) => ({
   ...smell,
-  consequences: CONSEQUENCES[smell.slug],
+  consequences: smell.consequences ?? CONSEQUENCES[smell.slug],
   flakinessProfile: FLAKINESS_PROFILES[smell.slug],
 }));
