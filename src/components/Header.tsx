@@ -1,46 +1,13 @@
-import { Search, Bug } from 'lucide-react';
+import { Bug, Code2, Menu, Search, X } from 'lucide-react';
+import { useState } from 'react';
+import type { CatalogPage } from './InformationPages';
 
-interface HeaderProps {
-  total: number;
-  query: string;
-  onQueryChange: (value: string) => void;
-}
+interface HeaderProps { total: number; query: string; onQueryChange: (value: string) => void; activePage: CatalogPage; onNavigate: (page: CatalogPage) => void; }
+const REPOSITORY_URL = 'https://github.com/Intelvega/test-smells-catalog';
+const navigation: Array<{ id: CatalogPage; label: string }> = [{ id: 'catalog', label: 'Catálogo' }, { id: 'methodology', label: 'Metodologia' }, { id: 'references', label: 'Referências' }, { id: 'contributors', label: 'Contribuidores' }];
 
-export function Header({ total, query, onQueryChange }: HeaderProps) {
-  return (
-    <header className="border-b border-border-soft bg-canvas/95 backdrop-blur sticky top-0 z-30">
-      <div className="mx-auto max-w-6xl px-5 py-4 sm:py-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-amber-300">
-              <Bug size={18} strokeWidth={1.75} />
-            </span>
-            <div>
-              <h1 className="font-mono text-[15px] font-medium leading-tight text-ink">
-                test-smells<span className="text-ink-faint">.catalog</span>
-              </h1>
-              <p className="text-xs text-ink-muted">
-                {total} anti-padrões de teste em JavaScript &amp; TypeScript
-              </p>
-            </div>
-          </div>
-
-          <div className="relative w-full sm:w-80">
-            <Search
-              size={16}
-              strokeWidth={1.75}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint"
-            />
-            <input
-              value={query}
-              onChange={(e) => onQueryChange(e.target.value)}
-              type="text"
-              placeholder="Buscar por nome, tag ou palavra-chave..."
-              className="w-full rounded-md border border-border bg-surface py-2 pl-9 pr-3 text-sm text-ink placeholder:text-ink-faint outline-none transition-colors focus:border-violet/60 focus:ring-1 focus:ring-violet/30"
-            />
-          </div>
-        </div>
-      </div>
-    </header>
-  );
+export function Header({ total, query, onQueryChange, activePage, onNavigate }: HeaderProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const go = (page: CatalogPage) => { onNavigate(page); setMenuOpen(false); };
+  return <header className="sticky top-0 z-30 border-b border-border-soft bg-canvas/95 backdrop-blur"><div className="mx-auto max-w-6xl px-5 py-4"><div className="flex items-center justify-between gap-3"><button onClick={() => go('catalog')} className="flex items-center gap-3 text-left"><span className="flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-amber-300"><Bug size={18} strokeWidth={1.75} /></span><span><span className="block font-mono text-[15px] font-medium leading-tight text-ink">test-smells<span className="text-ink-faint">.catalog</span></span><span className="block text-xs text-ink-muted">{total} anti-padrões em JavaScript &amp; TypeScript</span></span></button><nav className="hidden items-center gap-1 lg:flex">{navigation.map((item) => <button key={item.id} onClick={() => go(item.id)} className={`rounded-md px-3 py-2 text-sm transition-colors ${activePage === item.id ? 'bg-violet/10 text-violet-200' : 'text-ink-muted hover:bg-surface hover:text-ink'}`}>{item.label}</button>)}<a href={REPOSITORY_URL} target="_blank" rel="noreferrer" className="ml-2 inline-flex items-center gap-1.5 rounded-md border border-border px-3 py-2 text-sm text-ink-muted hover:border-violet/40 hover:text-violet-200"><Code2 size={15} />{'GitHub'}</a></nav><button className="rounded-md border border-border p-2 text-ink-muted lg:hidden" onClick={() => setMenuOpen(!menuOpen)} aria-label="Abrir menu">{menuOpen ? <X size={18} /> : <Menu size={18} />}</button></div>{menuOpen && <nav className="mt-4 grid gap-1 border-t border-border-soft pt-3 lg:hidden">{navigation.map((item) => <button key={item.id} onClick={() => go(item.id)} className={`rounded-md px-3 py-2 text-left text-sm ${activePage === item.id ? 'bg-violet/10 text-violet-200' : 'text-ink-muted'}`}>{item.label}</button>)}<a href={REPOSITORY_URL} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm text-ink-muted"><Code2 size={15} />{'GitHub'}</a></nav>}{activePage === 'catalog' && <div className="relative mt-4 w-full sm:w-80 lg:hidden"><Search size={16} strokeWidth={1.75} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" /><input value={query} onChange={(e) => onQueryChange(e.target.value)} type="text" placeholder="Buscar por nome, tag ou palavra-chave..." className="w-full rounded-md border border-border bg-surface py-2 pl-9 pr-3 text-sm text-ink placeholder:text-ink-faint outline-none focus:border-violet/60" /></div>}</div>{activePage === 'catalog' && <div className="mx-auto mt-4 hidden max-w-md lg:block"><div className="relative"><Search size={16} strokeWidth={1.75} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" /><input value={query} onChange={(e) => onQueryChange(e.target.value)} type="text" placeholder="Buscar por nome, tag ou palavra-chave..." className="w-full rounded-md border border-border bg-surface py-2 pl-9 pr-3 text-sm text-ink placeholder:text-ink-faint outline-none focus:border-violet/60" /></div></div>}</header>;
 }
