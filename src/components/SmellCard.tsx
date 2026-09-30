@@ -102,6 +102,10 @@ export function SmellCard({ smell, category, isOpen, onToggle }: SmellCardProps)
             <p className="text-sm leading-relaxed text-ink-muted">{smell.manifestation}</p>
           </Section>
 
+          <Section title="Proveniência dos exemplos">
+            <p className="text-sm leading-relaxed text-ink-muted">{smell.exampleProvenance === 'ai-generated-and-adapted' ? 'Exemplos didáticos gerados ou adaptados com apoio de IA a partir da descrição e das referências do smell, ajustados para JavaScript/Jest/Vitest. Eles devem ser revisados segundo o protocolo de validação do projeto.' : 'Proveniência registrada no catálogo.'}</p>
+          </Section>
+
           <Section title="Comparador de código">
             <CodeComparisonView badExample={smell.badExample} goodExample={smell.goodExample} />
           </Section>

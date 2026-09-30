@@ -33,6 +33,8 @@ export interface LiteratureSource {
   url?: string;
 }
 
+export type ExampleProvenance = 'ai-generated-and-adapted';
+
 export interface CodeExample {
   code: string;
   language: 'javascript' | 'typescript' | 'tsx' | 'jsx';
@@ -63,6 +65,8 @@ export interface TestSmell {
   consequences?: string;
   /** Estratégia objetiva para eliminar ou reduzir o smell. */
   refactoring?: string;
+  /** Como os exemplos didáticos foram produzidos. */
+  exampleProvenance?: ExampleProvenance;
   badExample: CodeExample;
   goodExample: CodeExample;
   detectionRule: DetectionRule;

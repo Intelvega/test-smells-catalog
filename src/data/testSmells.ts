@@ -110,6 +110,15 @@ const CONSEQUENCES: Record<string, string> = {
 };
 
 
+const DEFAULT_REFACTORING_BY_CATEGORY: Record<TestSmell['category'], string> = {
+  assertions: 'Expresse uma expectativa específica e verificável, limitada ao comportamento que o cenário pretende cobrir.',
+  fixtures: 'Reduza e explicite o setup, criando somente os dados necessários e isolando o estado de cada cenário.',
+  dependencies: 'Isole dependências externas por stubs, fakes ou recursos controlados e restaure qualquer estado compartilhado.',
+  duplication: 'Extraia somente a preparação ou intenção comum, mantendo cada cenário independente e legível.',
+  execution: 'Simplifique o fluxo do teste e garanta que ele seja executável, automatizado e verificável pelo runner.',
+  semantics: 'Reestruture o teste em Arrange–Act–Assert, com um nome claro e uma única intenção observável.',
+};
+
 const FLAKINESS_PROFILES: Record<string, FlakinessProfile> = {
   "flaky-test-intermittent-failures": {
     "factors": [],
@@ -943,7 +952,8 @@ const adminUser = makeUser({ role: 'admin' });`,
 
 test('calcula elegibilidade de crédito', () => {
   const result = evaluateCredit(fixture);
-  expect(result.approved).toBe(true); // por que este fixture aprova? não dá pra saber aqui`,
+  expect(result.approved).toBe(true); // por que este fixture aprova? não dá pra saber aqui
+});`,
     },
     goodExample: {
       language: 'javascript',
@@ -3845,6 +3855,7 @@ test('atualiza nome do usuário', () => {
 
 const ACADEMIC_SOURCES_BY_SMELL: Record<string, LiteratureSource[]> = {
   // Catálogo Gabriel/Meneses
+  'slow-test': [DISSERTATION],
   'anonymous-test': [DISSERTATION],
   'conditional-test-logic': [DISSERTATION],
   'duplicate-assert': [DISSERTATION],
@@ -3938,6 +3949,8 @@ function mergeSources(existing: LiteratureSource[] | undefined, additional: Lite
 export const TEST_SMELLS: TestSmell[] = RAW_TEST_SMELLS.map((smell) => ({
   ...smell,
   consequences: smell.consequences ?? CONSEQUENCES[smell.slug],
+  refactoring: smell.refactoring ?? DEFAULT_REFACTORING_BY_CATEGORY[smell.category],
+  exampleProvenance: smell.exampleProvenance ?? 'ai-generated-and-adapted',
   flakinessProfile: FLAKINESS_PROFILES[smell.slug],
   sources: mergeSources(
     mergeSources(smell.sources, ACADEMIC_SOURCES_BY_SMELL[smell.slug]),
